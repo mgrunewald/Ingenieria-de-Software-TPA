@@ -21,3 +21,5 @@ El Cliente es muy exigente en sus estándares de desarrollo y nos pide por contr
 Les preocupa mucho el código repetido, el uso de Ifs, los malos nombres y las responsabilidades entre objetos mal distribuidas (*).
 
 (*) comentaron algo como que incluye todo lo visto y corregido hasta ahora, porque se va a evaluar también ¯\_(ツ)_/¯
+
+.
