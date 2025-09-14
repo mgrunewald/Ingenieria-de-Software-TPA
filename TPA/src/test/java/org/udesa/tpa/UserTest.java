@@ -14,12 +14,4 @@ public class UserTest {
         assertEquals(password, user.getPassword());
     }
 
-    @Test
-    void test02CreatesUserCorrectlyWithValidOwnerName() {
-        String username = "martina";
-
-
-    }
-
-
 }
