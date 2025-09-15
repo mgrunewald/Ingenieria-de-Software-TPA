@@ -4,6 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.springframework.util.Assert.isTrue;
+import static org.springframework.util.Assert.notNull;
+
+
 public class Facade {
     private final Map<String, String> users = new HashMap<>();
     private final Map<String, String> sessions = new HashMap<>();
@@ -18,8 +22,8 @@ public class Facade {
 
     public String login(String username, String password) {
         String storedPassword = users.get(username);
-        if (storedPassword == null) { throw new IllegalArgumentException("Usuario no existe"); }
-        if (!storedPassword.equals(password)) { throw new IllegalArgumentException("Contraseña Incorrecta"); }
+        notNull(storedPassword, "Usuario no existe");
+        isTrue(storedPassword.equals(password), "Constraseña incorrecta");
         String token = UUID.randomUUID().toString();
         sessions.put(token, username);
         return token;
