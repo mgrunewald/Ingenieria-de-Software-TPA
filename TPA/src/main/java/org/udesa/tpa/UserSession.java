@@ -1,7 +1,6 @@
 package org.udesa.tpa;
 
 import java.time.*;
-import java.util.Objects;
 import java.util.UUID;
 import static org.springframework.util.Assert.*;
 
@@ -12,14 +11,14 @@ public final class UserSession {
     private final Instant expiresAt;
 
     private UserSession(String token, String username, Instant issuedAt, Instant expiresAt) {
-        notNull(token, "Token nulo");
-        notNull(username, "Username nulo");
-        notNull(issuedAt, "issuedAt nulo");
-        notNull(expiresAt, "expiresAt nulo");
         this.token = token;
         this.username = username;
         this.issuedAt = issuedAt;
         this.expiresAt = expiresAt;
+        notNull(token, "Token nulo");
+        notNull(username, "Username nulo");
+        notNull(issuedAt, "issuedAt nulo");
+        notNull(expiresAt, "expiresAt nulo");
     }
 
     public static UserSession issue(String username, Duration ttl, Clock clock) {
