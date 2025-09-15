@@ -23,21 +23,29 @@ public class FacadeTest {
     }
 
     @Test
-    void test03FailsToLoginWithIncorrectPassword() {
+    void test03StartsSessionCorrectly() {
         facade = new Facade();
         facade.register("martina", "12345678");
-        String token = facade.login("martina", "12345678");
+        String token = facade.login("martina", "12345678"); //arranca la sesion
+        assertNotNull(token);
+        assertTrue(facade.isSessionActive(token));
+    }
+
+    @Test
+    void test04FailsToLoginWithIncorrectPassword(){
+        facade = new Facade();
+        facade.register("martina", "12345678");
         assertThrows(IllegalArgumentException.class, () -> facade.login("martina", "otra"));
     }
 
     @Test
-    void test04UnregisteredUserFailsToLogin() {
+    void test05UnregisteredUserFailsToLogin() {
         Facade facade = new Facade();
         assertThrows(IllegalArgumentException.class, () -> facade.login("maximo", "password123"));
     }
 
     @Test
-    void test05TokenIsValid() {
+    void test06TokenIsValid() {
         facade = new Facade();
         facade.register("martina", "12345678");
         String token = facade.login("martina", "12345678");
