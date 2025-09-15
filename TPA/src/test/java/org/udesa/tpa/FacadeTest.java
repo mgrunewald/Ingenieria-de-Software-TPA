@@ -3,6 +3,7 @@ package org.udesa.tpa;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static java.util.Objects.isNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class FacadeTest {
@@ -34,6 +35,15 @@ public class FacadeTest {
         Facade facade = new Facade();
         assertThrows(IllegalArgumentException.class, () -> facade.login("maximo", "password123"));
     }
+
+    @Test
+    void test05TokenIsValid() {
+        facade = new Facade();
+        facade.register("martina", "12345678");
+        String token = facade.login("martina", "12345678");
+        assertFalse(isNull(token));
+    }
+
 }
 
 
