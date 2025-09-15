@@ -5,17 +5,21 @@ import static org.springframework.util.Assert.*;
 
 public class GiftCard {
     private final String owner;
+    private final int cardNumber;
     private int balance;
 
-    public  GiftCard(String owner,  int initialBalance) {
+    public  GiftCard(String owner, int cardNumber, int initialBalance) {
         isTrue(owner != null && !owner.isBlank(), "Owner inválido");
+        isTrue(cardNumber >= 0, "Número de tarjeta negativo");
         isTrue(initialBalance >= 0, "Balance inicial negativo");
         this.owner = owner;
+        this.cardNumber = cardNumber;
         this.balance = initialBalance;
     }
 
     public String owner() { return owner; }
     public int balance()  { return balance; }
+    public int cardNumber() { return cardNumber; }
 
     public void addBalance(int amount) {
         isTrue(amount > 0, "Monto a agregar debe ser positivo");
