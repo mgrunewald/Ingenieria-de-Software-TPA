@@ -15,7 +15,7 @@ public class Facade {
     private final Map<String, List<Charge>> charges = new HashMap<>(); // cardNumber -> cargos
     private final Map<String, GiftCard> giftCardsByCardNumber = new HashMap<>();
     private final Map<String, List<Charge>> ledger = new HashMap<>();
-    private final Map<String, Merchant> merchantsBySecret = new HashMap<>();
+    private final Map<String, Merchant> merchantsByPrivateCredential = new HashMap<>();
     private final Set<String> claimed = new HashSet<>();
 
 
@@ -106,8 +106,8 @@ public class Facade {
         return claimed.stream().sorted().toList();
     }
 
-    public void charge(String merchantSecret, String cardNumber, int amount, String description) {
-        Merchant m = merchantsBySecret.get(merchantSecret);
+    public void charge(String privateCredential, String cardNumber, int amount, String description) {
+        Merchant m = merchantsByPrivateCredential.get(privateCredential);
         if (m == null) throw new IllegalArgumentException("Merchant inválido");
 
         if (!claimed.contains(cardNumber)) throw new IllegalArgumentException("Tarjeta no reclamada");

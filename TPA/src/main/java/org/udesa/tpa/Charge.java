@@ -1,6 +1,7 @@
 package org.udesa.tpa;
 
 import java.time.Instant;
+import static org.springframework.util.Assert.hasText;
 
 public record Charge(
         String cardNumber,
@@ -10,18 +11,12 @@ public record Charge(
         Instant timestamp
 ) {
     public Charge {
-        if (cardNumber == null || cardNumber.isBlank()) {
-            throw new IllegalArgumentException("cardNumber inválido");
-        }
-        if (merchantId == null || merchantId.isBlank()) {
-            throw new IllegalArgumentException("merchantId inválido");
-        }
+        hasText(cardNumber,"cardNumber invalido");
+        hasText(merchantId,"merchantId invalido");
         if (amount <= 0) {
             throw new IllegalArgumentException("amount debe ser > 0");
         }
-        if (description == null) {
-            throw new IllegalArgumentException("description no puede ser null");
-        }
+        hasText(description,"description invalido");
         if (timestamp == null) {
             throw new IllegalArgumentException("timestamp no puede ser null");
         }

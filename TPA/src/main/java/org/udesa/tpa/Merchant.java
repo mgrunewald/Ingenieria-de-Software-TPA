@@ -1,12 +1,10 @@
 package org.udesa.tpa;
 
-public record Merchant(String id, String secret) {
+import static org.springframework.util.Assert.hasText;
+
+public record Merchant(String id, String privateCredential) {
     public Merchant {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("merchant id inválido");
-        }
-        if (secret == null || secret.isBlank()) {
-            throw new IllegalArgumentException("merchant secret inválido");
-        }
+        hasText(id, "id del comercio inválido");
+        hasText(privateCredential, "credencial privada del comercio inválida");
     }
 }

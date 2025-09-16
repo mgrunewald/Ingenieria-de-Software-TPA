@@ -60,7 +60,7 @@ public class GiftCardTest {
     }
 
     @Test
-    void test09RisesErrorsWhenMakingTransactionsWith0Money() {
+    void test09RisesErrorsWhenMakingTransactionsWithNoMoney() {
         GiftCard card = new GiftCard("martina", "1", 1000);
         assertThrows(IllegalArgumentException.class, () -> card.addBalance(0));
         assertThrows(IllegalArgumentException.class, () -> card.charge(0, "nada"));
