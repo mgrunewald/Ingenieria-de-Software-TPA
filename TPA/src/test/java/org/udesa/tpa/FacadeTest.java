@@ -2,6 +2,7 @@ package org.udesa.tpa;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -33,13 +34,13 @@ public class FacadeTest {
     @Test
     void test03StartsSessionCorrectly() {
         facade.register("martina", "12345678");
-        String token = facade.login("martina", "12345678"); //arranca la sesion
+        String token = facade.login("martina", "12345678"); // arranca la sesion
         assertNotNull(token);
         assertTrue(facade.isSessionActive(token));
     }
 
     @Test
-    void test04FailsToLoginWithIncorrectPassword(){
+    void test04FailsToLoginWithIncorrectPassword() {
         facade.register("martina", "12345678");
         assertThrows(IllegalArgumentException.class, () -> facade.login("martina", "otra"));
     }
@@ -67,11 +68,13 @@ public class FacadeTest {
         facade.preloadGiftCard(new GiftCard("maxi",    "3", 200));
 
         String token = facade.login("martina", "12345678");
+        List<String> mine = facade.myCards(token);
 
-        List<GiftCard> mine = facade.listGiftCards(token);
         assertEquals(2, mine.size());
-        assertTrue(mine.stream().allMatch(gc -> gc.owner().equals("martina")));
-        assertEquals(1500, facade.totalBalance(token));
+        assertTrue(mine.contains("1"));
+        assertTrue(mine.contains("2"));
+        assertFalse(mine.contains("3"));
+        assertEquals(1500, totalBalance(facade, token));
     }
 
     @Test
@@ -86,7 +89,7 @@ public class FacadeTest {
         clock.plus(Duration.ofMinutes(6));
 
         assertFalse(facade.isSessionActive(token));
-        assertThrows(IllegalArgumentException.class, () -> facade.listGiftCards(token));
+        assertThrows(IllegalArgumentException.class, () -> facade.myCards(token));
     }
 
     @Test
@@ -106,6 +109,10 @@ public class FacadeTest {
         assertThrows(IllegalArgumentException.class, () -> facade.statement(tMartina, "2"));
     }
 
+    // helper privado para test07
+    private static int totalBalance(Facade facade, String token) {
+        return facade.myCards(token).stream()
+                .mapToInt(cardNumber -> facade.balance(token, cardNumber))
+                .sum();
+    }
 }
-
-

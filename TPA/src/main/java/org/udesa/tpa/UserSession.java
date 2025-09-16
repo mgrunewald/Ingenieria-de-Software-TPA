@@ -8,7 +8,8 @@ public final class UserSession {
     private final String token;
     private final String username;
     private final Instant issuedAt;
-    private final Instant expiresAt;
+    private final Duration ttl;
+
 
     private UserSession(String token, String username, Instant issuedAt, Instant expiresAt) {
         notNull(token, "Token nulo");
@@ -18,7 +19,8 @@ public final class UserSession {
         this.token = token;
         this.username = username;
         this.issuedAt = issuedAt;
-        this.expiresAt = expiresAt;
+        this.ttl = Duration.between(issuedAt, expiresAt);
+        //this.ttl = ttl;
     }
 
     public static UserSession issue(String username, Duration ttl, Clock clock) {
@@ -33,7 +35,8 @@ public final class UserSession {
     }
 
     public boolean isActive(Clock clock) {
-        return !Instant.now(clock).isAfter(expiresAt);
+        Instant now = Instant.now(clock);
+        return !now.isAfter(issuedAt.plus(ttl));
     }
 
     public void ensureActive(Clock clock) {
@@ -43,5 +46,5 @@ public final class UserSession {
     public String token()     { return token; }
     public String username()  { return username; }
     public Instant issuedAt() { return issuedAt; }
-    public Instant expiresAt(){ return expiresAt; }
+    public Duration ttl() { return ttl; }
 }

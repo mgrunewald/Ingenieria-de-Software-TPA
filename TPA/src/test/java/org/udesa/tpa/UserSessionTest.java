@@ -17,7 +17,7 @@ class UserSessionTest {
 
         assertNotNull(session.token());
         assertEquals("martina", session.username());
-        assertEquals(Instant.parse("2025-09-15T20:05:00Z"), session.expiresAt());
+        assertEquals(Instant.parse("2025-09-15T20:05:00Z"), session.issuedAt().plus(ttl));
         assertTrue(session.isActive(clock));
     }
 
@@ -39,3 +39,6 @@ class UserSessionTest {
         assertThrows(IllegalArgumentException.class, () -> session.ensureActive(clock));
     }
 }
+
+
+//agregar muchos mas tests, en especial cubnir el caso en el que pida 2 tokens en el mismo ttl

@@ -13,15 +13,34 @@ public class Facade {
     private final Map<String, String> users = new HashMap<>();
     private final Map<String, UserSession> sessions = new HashMap<>();
     private final Map<String, List<Charge>> charges = new HashMap<>(); // cardNumber -> cargos
+    private final Map<String, GiftCard> giftCardsByCardNumber = new HashMap<>();
+    private final Map<String, List<Charge>> ledger = new HashMap<>();
+    private final Map<String, Merchant> merchantsBySecret = new HashMap<>();
+    private final Set<String> claimed = new HashSet<>();
+
+
     private final Clock clock;
     private final Duration ttl;
 
-    public Facade() { this(Clock.systemUTC(), Duration.ofMinutes(5)); }
+    public Facade() {
+        this(Clock.systemUTC(), Duration.ofMinutes(5));
+    }
+
     public Facade(Clock clock, Duration ttl) {
         this.clock = Objects.requireNonNull(clock);
         this.ttl = Objects.requireNonNull(ttl);
     }
-    private final Map<String, GiftCard> GiftCardsByCardNumber = new HashMap<>();
+
+    public void preloadUser(String username, String password) {
+        if (username == null || username.isBlank()) throw new IllegalArgumentException("username inválido");
+        if (password == null || password.isBlank()) throw new IllegalArgumentException("password inválido");
+        users.put(username, password);
+    }
+
+    public void preloadGiftCard(GiftCard card) {
+        Objects.requireNonNull(card, "card");
+        giftCardsByCardNumber.put(card.cardNumber(), card);
+    }
 
     public void register(String username, String password) {
         users.put(username, password); //creo la entrada en la la lista de (usuarios, contraseña)
@@ -49,53 +68,62 @@ public class Facade {
         return active;
     }
 
-    private String requireActiveUsername(String sessionToken) {
-        isTrue(isSessionActive(sessionToken), "Sesión expirada o inválida");
-        return sessions.get(sessionToken).username();
+    private String requireActiveUsername(String token) {
+        isTrue(isSessionActive(token), "Sesión expirada o inválida");
+        return sessions.get(token).username();
     }
 
-    public void preloadGiftCard(GiftCard card) {
-        notNull(card, "GiftCard nula");
-        isTrue(!GiftCardsByCardNumber.containsKey(card.cardNumber()), "Card number duplicado");
-        GiftCardsByCardNumber.put(card.cardNumber(), card);
+    public void claim(String token, String cardNumber) {
+        String user = requireActiveUsername(token);
+        GiftCard card = requireOwnedCard(user, cardNumber);
+        claimed.add(card.cardNumber());
     }
 
-    public List<GiftCard> listGiftCards(String sessionToken) {
-        String username = requireActiveUsername(sessionToken);
-        List<GiftCard> cards = new ArrayList<>();
-        for (GiftCard card : GiftCardsByCardNumber.values()) {
-            if (card.owner().equals(username)) cards.add(card);
-        }
-        return List.copyOf(cards);
-    }
-
-    public int totalBalance(String sessionToken) {
-        return listGiftCards(sessionToken).stream().mapToInt(GiftCard::balance).sum();
-    }
-
-    public record Charge(String merchantKey, String cardNumber, int amount, String description, Instant at) {}
-
-    public int balance(String sessionToken, String cardNumber) {
-        String user = requireActiveUsername(sessionToken);
-        GiftCard card = GiftCardsByCardNumber.get(cardNumber);
-        notNull(card, "Gift card inexistente");
-        isTrue(card.owner().equals(user), "Gift card no pertenece al usuario");
+    public int balance(String token, String cardNumber) {
+        String user = requireActiveUsername(token);
+        GiftCard card = requireOwnedCard(user, cardNumber);
         return card.balance();
     }
 
-    public List<Charge> statement(String sessionToken, String cardNumber) {
-        String user = requireActiveUsername(sessionToken);
-        GiftCard card = GiftCardsByCardNumber.get(cardNumber);
-        notNull(card, "Gift card inexistente");
-        isTrue(card.owner().equals(user), "Gift card no pertenece al usuario");
-        return List.copyOf(charges.getOrDefault(cardNumber, List.of()));
+    public List<Charge> statement(String token, String cardNumber) {
+        String user = requireActiveUsername(token);
+        requireOwnedCard(user, cardNumber);
+        return List.copyOf(ledger.getOrDefault(cardNumber, List.of()));
     }
 
-    public Optional<String> usernameOf(String sessionToken) {
-        UserSession s = sessions.get(sessionToken);
-        if (s == null) return Optional.empty();
-        if (!s.isActive(clock)) { sessions.remove(sessionToken); return Optional.empty(); }
-        return Optional.of(s.username());
+    public List<String> myCards(String token) {
+        String user = requireActiveUsername(token);
+        List<String> result = new ArrayList<>();
+        for (GiftCard c : giftCardsByCardNumber.values()) {
+            if (c.owner().equals(user)) result.add(c.cardNumber());
+        }
+        result.sort(Comparator.naturalOrder());
+        return List.copyOf(result);
     }
 
+    public List<String> myClaimedCards(String token) {
+        requireActiveUsername(token);
+        return claimed.stream().sorted().toList();
+    }
+
+    public void charge(String merchantSecret, String cardNumber, int amount, String description) {
+        Merchant m = merchantsBySecret.get(merchantSecret);
+        if (m == null) throw new IllegalArgumentException("Merchant inválido");
+
+        if (!claimed.contains(cardNumber)) throw new IllegalArgumentException("Tarjeta no reclamada");
+
+        GiftCard card = giftCardsByCardNumber.get(cardNumber);
+        if (card == null) throw new IllegalArgumentException("Tarjeta inexistente");
+
+        card.charge(amount, description);
+        ledger.computeIfAbsent(cardNumber, k -> new ArrayList<>())
+                .add(new Charge(cardNumber, m.id(), amount, description, Instant.now(clock)));
+    }
+
+    private GiftCard requireOwnedCard(String username, String cardNumber) {
+        GiftCard card = giftCardsByCardNumber.get(cardNumber);
+        if (card == null) throw new IllegalArgumentException("Gift card inexistente");
+        if (!card.owner().equals(username)) throw new IllegalArgumentException("Gift card no pertenece al usuario");
+        return card;
+    }
 }

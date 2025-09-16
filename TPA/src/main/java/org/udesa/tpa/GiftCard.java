@@ -18,8 +18,8 @@ public class GiftCard {
     }
 
     public String owner() { return owner; }
+    public String cardNumber() { return cardNumber; }
     public int balance()  { return balance; }
-    public String cardNumber() { return String.valueOf(cardNumber); }
 
     public void addBalance(int amount) {
         isTrue(amount > 0, "Monto a agregar debe ser positivo");
