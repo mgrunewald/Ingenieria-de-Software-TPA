@@ -17,7 +17,7 @@ public class FacadeTest {
 
     @BeforeEach
     public void createFacade() {
-        facade = new Facade();
+        facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
     }
 
     @Test
@@ -34,7 +34,7 @@ public class FacadeTest {
     @Test
     void test03StartsSessionCorrectly() {
         facade.register("martina", "12345678");
-        String token = facade.login("martina", "12345678"); // arranca la sesion
+        String token = facade.login("martina", "12345678");
         assertNotNull(token);
         assertTrue(facade.isSessionActive(token));
     }
@@ -68,12 +68,17 @@ public class FacadeTest {
         facade.preloadGiftCard(new GiftCard("maxi",    "3", 200));
 
         String token = facade.login("martina", "12345678");
+
+        facade.claim(token, "1");
+        facade.claim(token, "2");
+
         List<String> mine = facade.myCards(token);
 
         assertEquals(2, mine.size());
         assertTrue(mine.contains("1"));
         assertTrue(mine.contains("2"));
         assertFalse(mine.contains("3"));
+
         assertEquals(1500, totalBalance(facade, token));
     }
 
@@ -86,8 +91,9 @@ public class FacadeTest {
         facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
 
         String token = facade.login("martina", "12345678");
-        clock.plus(Duration.ofMinutes(6));
+        facade.claim(token, "1");
 
+        clock.plus(Duration.ofMinutes(6));
         assertFalse(facade.isSessionActive(token));
         assertThrows(IllegalArgumentException.class, () -> facade.myCards(token));
     }
@@ -102,6 +108,8 @@ public class FacadeTest {
         facade.preloadGiftCard(new GiftCard("maxi",    "2",  500));
 
         String tMartina = facade.login("martina", "12345678");
+        facade.claim(tMartina, "1");
+
         assertEquals(1000, facade.balance(tMartina, "1"));
         assertEquals(0, facade.statement(tMartina, "1").size());
 
@@ -113,10 +121,11 @@ public class FacadeTest {
     void test10DoesNotAllowTwoGiftCardsWithTheSameNumberButDifferentOwners() {
         facade.register("martina", "12345678");
         facade.register("maxi", "abcdefgh");
-        facade.login("martina", "12345678");
-        facade.login("maxi", "abcdefgh");
+        String t1 = facade.login("martina", "12345678");
+        String t2 = facade.login("maxi", "abcdefgh");
+
         facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
-        assertThrows(IllegalArgumentException.class, () -> facade.preloadGiftCard(new GiftCard("maxi",    "1",  500)));
+        assertThrows(IllegalArgumentException.class, () -> facade.preloadGiftCard(new GiftCard("maxi", "1", 500)));
     }
 
     // helper privado para test07
@@ -126,3 +135,4 @@ public class FacadeTest {
                 .sum();
     }
 }
+
