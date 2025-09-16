@@ -5,8 +5,7 @@ import java.util.Map;
 import java.time.*;
 import java.util.*;
 
-import static org.springframework.util.Assert.isTrue;
-import static org.springframework.util.Assert.notNull;
+import static org.springframework.util.Assert.*;
 
 
 public class Facade {
@@ -32,8 +31,8 @@ public class Facade {
     }
 
     public void preloadUser(String username, String password) {
-        if (username == null || username.isBlank()) throw new IllegalArgumentException("username inválido");
-        if (password == null || password.isBlank()) throw new IllegalArgumentException("password inválido");
+        hasText(username, "username inválido");
+        hasText(password, "password inválido");
         users.put(username, password);
     }
 
@@ -43,7 +42,7 @@ public class Facade {
     }
 
     public void register(String username, String password) {
-        users.put(username, password); //creo la entrada en la la lista de (usuarios, contraseña)
+        users.put(username, password);
     }
 
     public boolean exists(String username) {
@@ -108,12 +107,12 @@ public class Facade {
 
     public void charge(String privateCredential, String cardNumber, int amount, String description) {
         Merchant m = merchantsByPrivateCredential.get(privateCredential);
-        if (m == null) throw new IllegalArgumentException("Merchant inválido");
+        notNull(m, "Merchant inválido");
 
         if (!claimed.contains(cardNumber)) throw new IllegalArgumentException("Tarjeta no reclamada");
 
         GiftCard card = giftCardsByCardNumber.get(cardNumber);
-        if (card == null) throw new IllegalArgumentException("Tarjeta inexistente");
+        notNull(card, "Número de tarjeta inválido");
 
         card.charge(amount, description);
         ledger.computeIfAbsent(cardNumber, k -> new ArrayList<>())
@@ -122,7 +121,7 @@ public class Facade {
 
     private GiftCard requireOwnedCard(String username, String cardNumber) {
         GiftCard card = giftCardsByCardNumber.get(cardNumber);
-        if (card == null) throw new IllegalArgumentException("Gift card inexistente");
+        notNull(card, "Gift card inexistente");
         if (!card.owner().equals(username)) throw new IllegalArgumentException("Gift card no pertenece al usuario");
         return card;
     }
