@@ -107,8 +107,8 @@ public class Facade {
     }
 
     public void charge(String privateCredential, String cardNumber, int amount, String description) {
-        Merchant m = merchantsByPrivateCredential.get(privateCredential);
-        notNull(m, "Merchant inválido");
+        Merchant merchant = merchantsByPrivateCredential.get(privateCredential);
+        notNull(merchant, "Merchant inválido");
 
         if (!claimed.contains(cardNumber)) throw new IllegalArgumentException("Tarjeta no reclamada");
 
@@ -117,7 +117,7 @@ public class Facade {
 
         card.charge(amount, description);
         ledger.computeIfAbsent(cardNumber, k -> new ArrayList<>())
-                .add(new Charge(cardNumber, m.id(), amount, description, Instant.now(clock)));
+                .add(new Charge(cardNumber, merchant.id(), amount, description, Instant.now(clock)));
     }
 
     private GiftCard requireOwnedCard(String username, String cardNumber) {

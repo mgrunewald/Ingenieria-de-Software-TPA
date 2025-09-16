@@ -1,9 +1,16 @@
 package org.udesa.tpa;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GiftCardTest {
+    private GiftCard card;
+
+    @BeforeEach
+    public void createCard() {
+        GiftCard card = new GiftCard("martina", "1",1000);
+    }
 
     @Test
     void test01CreatesGiftCardCorrectlyWithOwnerAndInitialBalance() {
@@ -64,6 +71,12 @@ public class GiftCardTest {
         GiftCard card = new GiftCard("martina", "1", 1000);
         assertThrows(IllegalArgumentException.class, () -> card.addBalance(0));
         assertThrows(IllegalArgumentException.class, () -> card.charge(0, "nada"));
+    }
+
+    @Test
+    void test10RisesErrorWhenDescriptionIsEmpty() {
+        GiftCard card = new GiftCard("martina", "1", 1000);
+        assertThrows(IllegalArgumentException.class, () -> card.charge(0, ""));
     }
 
 }

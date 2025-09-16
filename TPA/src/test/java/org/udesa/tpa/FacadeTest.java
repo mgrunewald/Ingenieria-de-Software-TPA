@@ -109,6 +109,16 @@ public class FacadeTest {
         assertThrows(IllegalArgumentException.class, () -> facade.statement(tMartina, "2"));
     }
 
+    @Test
+    void test10DoesNotAllowTwoGiftCardsWithTheSameNumberButDifferentOwners() {
+        facade.register("martina", "12345678");
+        facade.register("maxi", "abcdefgh");
+        facade.login("martina", "12345678");
+        facade.login("maxi", "abcdefgh");
+        facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
+        assertThrows(IllegalArgumentException.class, () -> facade.preloadGiftCard(new GiftCard("maxi",    "1",  500)));
+    }
+
     // helper privado para test07
     private static int totalBalance(Facade facade, String token) {
         return facade.myCards(token).stream()

@@ -1,4 +1,3 @@
-// UserSessionTest.java
 package org.udesa.tpa;
 
 import org.junit.jupiter.api.Test;
