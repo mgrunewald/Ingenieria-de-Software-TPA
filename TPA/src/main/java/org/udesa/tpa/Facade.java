@@ -37,8 +37,9 @@ public class Facade {
     }
 
     public void preloadGiftCard(GiftCard card) {
-        Objects.requireNonNull(card, "card");
-        giftCardsByCardNumber.put(card.cardNumber(), card);
+        Objects.requireNonNull(card, "card nula");
+        GiftCard prev = giftCardsByCardNumber.putIfAbsent(card.cardNumber(), card);
+        isTrue(prev == null, "Gift card duplicada: " + card.cardNumber());
     }
 
     public void register(String username, String password) {
