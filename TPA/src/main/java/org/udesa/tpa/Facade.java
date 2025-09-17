@@ -28,8 +28,10 @@ public final class Facade {
         notNull(password, "Password no puede ser nulo");
         hasText(username, "Username no puede ser nulo");
         hasText(password, "Password no puede ser nulo");
-        isTrue(!users.containsKey(username), "Usuario ya registrado");
-        users.put(username, password);
+        String prev = users.putIfAbsent(username, password);
+        isTrue(prev == null, "Usuario ya registrado");
+        //isTrue(!users.containsKey(username), "Usuario ya registrado");
+        //users.put(username, password);
     }
 
     public boolean exists(String username) {
@@ -69,12 +71,12 @@ public final class Facade {
     }
 
     public void preloadGiftCard(GiftCard card) {
-        Objects.requireNonNull(card, "Gift card nula");
-        var existing = giftCardsByNumber.get(card.cardNumber());
-        if (existing != null && !existing.owner().equals(card.owner())) {
-            throw new IllegalArgumentException("Ya existe una gift card con ese número para otro dueño");
-        }
-        giftCardsByNumber.put(card.cardNumber(), card);
+        notNull(card, "Gift card nula");
+        hasText(card.cardNumber(), "Número de tarjeta vacío");
+        hasText(card.owner(), "Owner vacío");
+
+        GiftCard prev = giftCardsByNumber.putIfAbsent(card.cardNumber(), card);
+        isTrue(prev == null, "Ya existe una gift card con ese número");
     }
 
     public void claim(String token, String cardNumber) {
@@ -82,21 +84,16 @@ public final class Facade {
         var card = giftCardsByNumber.get(cardNumber);
         notNull(card, "Gift card inexistente");
         isTrue(card.owner().equals(session.username()), "Gift card no pertenece al usuario");
-        claimsByToken.computeIfAbsent(token, k -> new HashSet<>()).add(cardNumber);
+        boolean added = claimsByToken.computeIfAbsent(token, k -> new HashSet<>()).add(cardNumber);
+        isTrue(added, "La tarjeta ya fue reclamada en esta sesión");
     }
 
     private GiftCard requireClaimed(String token, String cardNumber) {
         var session = requireActiveSession(token);
         var card = giftCardsByNumber.get(cardNumber);
         notNull(card, "Gift card inexistente");
-
-        var claimed = claimsByToken.getOrDefault(token, Set.of());
-        if (!claimed.contains(cardNumber)) {
-            throw new IllegalArgumentException("La tarjeta no fue reclamada en esta sesión");
-        }
-        if (!card.owner().equals(session.username())) {
-            throw new IllegalArgumentException("Gift card no pertenece al usuario");
-        }
+        isTrue(claimsByToken.getOrDefault(token, Set.of()).contains(cardNumber), "La tarjeta no fue reclamada en esta sesión");
+        isTrue(card.owner().equals(session.username()), "Gift card no pertenece al usuario");
         return card;
     }
 
@@ -123,26 +120,24 @@ public final class Facade {
     }
 
     public void registerMerchant(String id, String privateCredential) {
-        merchantsById.put(id, new Merchant(id, privateCredential));
+        hasText(id, "Merchant id vacío");
+        hasText(privateCredential, "Credencial vacía");
+        Merchant prev = merchantsById.putIfAbsent(id, new Merchant(id, privateCredential));
+        isTrue(prev == null, "Merchant ya registrado");
     }
 
     private Merchant requireMerchant(String merchantId, String privateCredential) {
         var merchant = merchantsById.get(merchantId);
         notNull(merchant, "Merchant desconocido");
-        if (!merchant.privateCredential().equals(privateCredential)) {
-            throw new IllegalArgumentException("Credencial de merchant inválida");
-        }
+        isTrue(merchant.privateCredential().equals(privateCredential), "Credencial inválida");
         return merchant;
     }
 
-    public void charge(String token, String merchantId, String merchantCredential,
-                       String cardNumber, int amount, String description) {
+    public void charge(String token, String merchantId, String merchantCredential, String cardNumber, int amount, String description) {
         requireActiveSession(token);
         var merchant = requireMerchant(merchantId, merchantCredential);
         var card = requireClaimed(token, cardNumber);
-
         card.charge(amount, description);
-
         var charge = new Charge(card.cardNumber(), merchant.id(), amount, description, Instant.now(clock));
         chargesByCard.computeIfAbsent(cardNumber, k -> new ArrayList<>()).add(charge);
     }
