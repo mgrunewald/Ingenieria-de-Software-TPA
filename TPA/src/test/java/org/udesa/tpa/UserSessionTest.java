@@ -2,7 +2,6 @@ package org.udesa.tpa;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import java.time.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -49,6 +48,3 @@ class UserSessionTest {
     }
 
 }
-
-
-//agregar muchos mas tests, en especial cubnir el caso en el que pida 2 tokens en el mismo ttl
