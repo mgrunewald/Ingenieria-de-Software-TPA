@@ -43,10 +43,7 @@ public final class UserSession {
 
     public void ensureActive(Clock clock) {
         notNull(clock, "Clock nulo");
-        if (!isActive(clock)) {
-            throw new IllegalArgumentException("Token expirado");
-            //throw new IllegalStateException("Token expirado");
-        }
+        isTrue(!Instant.now(clock).isAfter(expiresAt), "Token expirado");
     }
 
     public String token()     { return token; }

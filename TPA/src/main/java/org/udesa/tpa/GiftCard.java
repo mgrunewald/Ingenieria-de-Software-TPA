@@ -9,8 +9,8 @@ public class GiftCard {
     private int balance;
 
     public  GiftCard(String owner, String cardNumber, int initialBalance) {
-        isTrue(owner != null && !owner.isBlank(), "Owner inválido");
-        isTrue(cardNumber != null, "Número de inválido");
+        hasText(cardNumber, "Número de tarjeta inválido");
+        hasText(owner, "Owner inválido");
         isTrue(initialBalance >= 0, "Balance inicial negativo");
         this.owner = owner;
         this.cardNumber = cardNumber;

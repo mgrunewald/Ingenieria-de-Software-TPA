@@ -9,7 +9,7 @@ public class GiftCardTest {
 
     @BeforeEach
     public void createCard() {
-        this.card = new GiftCard("martina", "1",1000);
+        this.card = new GiftCard("martina", "1", 1000);
     }
 
     @Test
@@ -21,7 +21,7 @@ public class GiftCardTest {
     @Test
     void test02InitialBalanceIsNotNegative() {
         assertFalse(card.balance() < 0);
-        assertThrows(IllegalArgumentException.class, () -> new GiftCard("martina", "1",-3));
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard("martina", "1", -3));
     }
 
     @Test
@@ -37,7 +37,7 @@ public class GiftCardTest {
 
     @Test
     void test05CanNotChargeANegativeBalance() {
-        assertThrows(IllegalArgumentException.class, () -> card.charge(-500,  "kiosco"));
+        assertThrows(IllegalArgumentException.class, () -> card.charge(-500, "kiosco"));
     }
 
     @Test
@@ -53,8 +53,8 @@ public class GiftCardTest {
 
     @Test
     void test08Creates2GiftCardCorrectly() {
-        GiftCard card1 = new GiftCard("martina", "1",1000);
-        GiftCard card2 = new GiftCard("martina", "2",100);
+        GiftCard card1 = new GiftCard("martina", "1", 1000);
+        GiftCard card2 = new GiftCard("martina", "2", 100);
         assertEquals(1000, card1.balance());
         assertEquals(100, card2.balance());
     }
@@ -66,8 +66,16 @@ public class GiftCardTest {
     }
 
     @Test
-    void test10RisesErrorWhenDescriptionIsEmpty() {
+    void test10FailsToChargeWithInvalidDescription() {
         assertThrows(IllegalArgumentException.class, () -> card.charge(0, ""));
+    }
+
+    @Test
+    void test11FailsToCreateGiftCardWithInvalidOwnerAndCardNumber() {
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard(null, "1", 100));
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard("  ", "1", 100));
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard("martina", null, 100));
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard("martina", "  ", 100));
     }
 
 }

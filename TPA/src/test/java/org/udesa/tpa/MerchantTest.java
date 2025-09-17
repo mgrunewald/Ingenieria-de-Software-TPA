@@ -35,5 +35,4 @@ public class MerchantTest {
         assertEquals("uala123", merchant2.privateCredential());
     }
 
-
 }
