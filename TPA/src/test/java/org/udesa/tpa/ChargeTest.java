@@ -10,26 +10,19 @@ import static org.udesa.tpa.TestFixtures.*;
 public class ChargeTest {
 
     @Test
-    void createsValidCharge() {
-        var c = new Charge("1", "mercado-pago", 300, "cafe de havanna", now());
+    void test01createsValidCharge() {
+        var charge = new Charge("1", "mercado-pago", 300, "cafe de havanna", now());
         assertAll(
-                () -> assertEquals("1", c.cardNumber()),
-                () -> assertEquals("mercado-pago", c.merchantId()),
-                () -> assertEquals(300, c.amount()),
-                () -> assertEquals("cafe de havanna", c.description()),
-                () -> assertEquals(now(), c.timestamp())
+                () -> assertEquals("1", charge.cardNumber()),
+                () -> assertEquals("mercado-pago", charge.merchantId()),
+                () -> assertEquals(300, charge.amount()),
+                () -> assertEquals("cafe de havanna", charge.description()),
+                () -> assertEquals(now(), charge.timestamp())
         );
     }
 
     @Test
-    void differentTimestampsMeanDifferentCharges() {
-        var c1 = new Charge("1", "mercado-pago", 300, "cafe", now());
-        var c2 = new Charge("1", "mercado-pago", 300, "cafe", oneSecondLater());
-        assertNotEquals(c1, c2);
-    }
-
-    @Test
-    void canNotChargeAmountZeroOrNegative() {
+    void test02canNotChargeAmountZeroOrNegative() {
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class, () -> new Charge("1", "mp", 0,   "kiosco", now())),
                 () -> assertThrows(IllegalArgumentException.class, () -> new Charge("1", "mp", -3,  "kiosco", now()))
@@ -38,22 +31,29 @@ public class ChargeTest {
 
     @ParameterizedTest
     @MethodSource("org.udesa.tpa.TestFixtures#blanks")
-    void failsOnInvalidMerchantId(String invalid) {
+    void test03failsOnInvalidMerchantId(String invalid) {
         assertThrows(IllegalArgumentException.class, () -> new Charge("1", invalid, 300, "cafe", now()));
     }
 
     @ParameterizedTest
     @MethodSource("org.udesa.tpa.TestFixtures#blanks")
-    void failsOnInvalidDescription(String invalid) {
+    void test04failsOnInvalidDescription(String invalid) {
         assertThrows(IllegalArgumentException.class, () -> new Charge("1", "mp", 300, invalid, now()));
     }
 
     @Test
-    void cardNumberMustBeOnlyDigits() {
+    void test05cardNumberMustBeOnlyDigits() {
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class, () -> new Charge("a",  "mp", 1000, "kiosco", now())),
                 () -> assertThrows(IllegalArgumentException.class, () -> new Charge("a1", "mp", 1000, "kiosco", now())),
                 () -> assertThrows(IllegalArgumentException.class, () -> new Charge("-1", "mp", 1000, "kiosco", now()))
         );
+    }
+
+    @Test
+    void test06differentTimestampsMeanDifferentCharges() {
+        var c1 = new Charge("1", "mercado-pago", 300, "cafe", now());
+        var c2 = new Charge("1", "mercado-pago", 300, "cafe", oneSecondLater());
+        assertNotEquals(c1, c2);
     }
 }
