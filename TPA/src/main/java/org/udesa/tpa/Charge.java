@@ -1,22 +1,9 @@
-// src/main/java/org/udesa/tpa/Charge.java
 package org.udesa.tpa;
 
 import java.time.Instant;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-/**
- * Representa un cargo realizado sobre una gift card.
- * Invariantes de dominio (sin ifs):
- * - cardNumber: no vacío y compuesto solo por dígitos.
- * - merchantId: no vacío.
- * - amount: > 0 (en unidades mínimas, p.ej. centavos).
- * - description: no vacía.
- * - timestamp: no nulo.
- *
- * Las validaciones usan Optional.filter().orElseThrow() para cumplir
- * con la restricción de evitar condicionales explícitos en negocio.
- */
 public record Charge(
         String cardNumber,
         String merchantId,
@@ -26,29 +13,21 @@ public record Charge(
 ) {
     private static final Pattern DIGITS = Pattern.compile("\\d+");
 
+    public static String VALUE_GREATER_THAN_ZERO = "Value must be grater than 0";
+    public static String VALUE_MUST_BE_NUMERIC = "Value must be numeric";
+    public static String VALUE_CAN_NOT_BE_NULL = "Value must be numeric";
+
     public Charge {
-        cardNumber = nonBlank(cardNumber, "cardNumber");
-        merchantId = nonBlank(merchantId, "merchantId");
-        description = nonBlank(description, "description");
+        cardNumber = Utils.nonBlank(cardNumber, "cardNumber");
+        merchantId = Utils.nonBlank(merchantId, "merchantId");
+        description = Utils.nonBlank(description, "description");
 
-        // cardNumber solo dígitos
-        ensure(DIGITS.matcher(cardNumber).matches(), "cardNumber debe ser numérico positivo");
-        // amount > 0
-        ensure(amount > 0, "amount debe ser > 0");
-        // timestamp no nulo
+        ensure(DIGITS.matcher(cardNumber).matches(), VALUE_MUST_BE_NUMERIC + VALUE_GREATER_THAN_ZERO);
+        ensure(amount > 0, VALUE_GREATER_THAN_ZERO);
         timestamp = Optional.ofNullable(timestamp)
-                .orElseThrow(() -> new IllegalArgumentException("timestamp no puede ser null"));
+                .orElseThrow(() -> new IllegalArgumentException(VALUE_CAN_NOT_BE_NULL));
     }
 
-    /** Valida que un string no sea nulo ni en blanco. */
-    private static String nonBlank(String value, String field) {
-        return Optional.ofNullable(value)
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .orElseThrow(() -> new IllegalArgumentException(field + " inválido"));
-    }
-
-    /** Asegura una condición sin ifs: true → ok; false → IllegalArgumentException. */
     private static void ensure(boolean condition, String message) {
         Optional.of(condition)
                 .filter(Boolean::booleanValue)

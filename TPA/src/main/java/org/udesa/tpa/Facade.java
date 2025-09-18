@@ -24,14 +24,10 @@ public final class Facade {
     }
 
     public void register(String username, String password) {
-        notNull(username, "Username no puede ser nulo");
-        notNull(password, "Password no puede ser nulo");
-        hasText(username, "Username no puede ser nulo");
-        hasText(password, "Password no puede ser nulo");
+        Utils.nonBlank(username, "username");
+        Utils.nonBlank(password, "password");
         String prev = users.putIfAbsent(username, password);
-        isTrue(prev == null, "Usuario ya registrado");
-        //isTrue(!users.containsKey(username), "Usuario ya registrado");
-        //users.put(username, password);
+        Utils.ensure(prev == null, "Usuario ya registrado" );
     }
 
     public boolean exists(String username) {
@@ -40,13 +36,13 @@ public final class Facade {
 
     private String requirePassword(String username) { //con esto saco los ifs en login
         var pass = users.get(username);
-        notNull(pass, "Usuario inexistente");
+        Utils.nonBlank(pass, "username");
         return pass;
     }
 
     public String login(String username, String password) {
         String realPass = requirePassword(username);
-        isTrue(Objects.equals(realPass, password), "Password incorrecto");
+        Utils.ensure(Objects.equals(realPass, password), "Password incorrecto");
         var session = UserSession.issue(username, ttl, clock);
         sessionsByToken.put(session.token(), session);
         return session.token();
@@ -56,7 +52,7 @@ public final class Facade {
         var session = sessionsByToken.get(token);
         if (session == null) return false;
         try {
-            session.ensureActive(clock); // lanza IllegalArgumentException("Token expirado") si venció
+            session.ensureActive(clock);
             return true;
         } catch (IllegalArgumentException ex) {
             return false;
@@ -72,28 +68,28 @@ public final class Facade {
 
     public void preloadGiftCard(GiftCard card) {
         notNull(card, "Gift card nula");
-        hasText(card.cardNumber(), "Número de tarjeta vacío");
-        hasText(card.owner(), "Owner vacío");
+        Utils.nonBlank(card.cardNumber(), "cardNumber");
+        Utils.nonBlank(card.owner(), "owner");
 
         GiftCard prev = giftCardsByNumber.putIfAbsent(card.cardNumber(), card);
-        isTrue(prev == null, "Ya existe una gift card con ese número");
+        Utils.ensure(prev == null, "Gift card ya registrado con ese número");
     }
 
     public void claim(String token, String cardNumber) {
         var session = requireActiveSession(token);
         var card = giftCardsByNumber.get(cardNumber);
         notNull(card, "Gift card inexistente");
-        isTrue(card.owner().equals(session.username()), "Gift card no pertenece al usuario");
+        Utils.ensure(card.owner().equals(session.username()), "Gift card no pertenece al usuario");
         boolean added = claimsByToken.computeIfAbsent(token, k -> new HashSet<>()).add(cardNumber);
-        isTrue(added, "La tarjeta ya fue reclamada en esta sesión");
+        Utils.ensure(added, "Gift card ya reclamada en esta session");
     }
 
     private GiftCard requireClaimed(String token, String cardNumber) {
         var session = requireActiveSession(token);
         var card = giftCardsByNumber.get(cardNumber);
         notNull(card, "Gift card inexistente");
-        isTrue(claimsByToken.getOrDefault(token, Set.of()).contains(cardNumber), "La tarjeta no fue reclamada en esta sesión");
-        isTrue(card.owner().equals(session.username()), "Gift card no pertenece al usuario");
+        Utils.ensure(claimsByToken.getOrDefault(token, Set.of()).contains(cardNumber), "La tarjeta no fue reclamada en esta sesión");
+        Utils.ensure(card.owner().equals(session.username()), "Gift card no pertenece al usuario");
         return card;
     }
 
@@ -120,16 +116,16 @@ public final class Facade {
     }
 
     public void registerMerchant(String id, String privateCredential) {
-        hasText(id, "Merchant id vacío");
-        hasText(privateCredential, "Credencial vacía");
+        Utils.nonBlank(id, "id");
+        Utils.nonBlank(privateCredential, "privateCredential");
         Merchant prev = merchantsById.putIfAbsent(id, new Merchant(id, privateCredential));
-        isTrue(prev == null, "Merchant ya registrado");
+        Utils.ensure(prev == null, "Merchant ya registrado");
     }
 
     private Merchant requireMerchant(String merchantId, String privateCredential) {
         var merchant = merchantsById.get(merchantId);
         notNull(merchant, "Merchant desconocido");
-        isTrue(merchant.privateCredential().equals(privateCredential), "Credencial inválida");
+        Utils.ensure(merchant.privateCredential().equals(privateCredential), "Credencial inválida");
         return merchant;
     }
 
@@ -141,4 +137,5 @@ public final class Facade {
         var charge = new Charge(card.cardNumber(), merchant.id(), amount, description, Instant.now(clock));
         chargesByCard.computeIfAbsent(cardNumber, k -> new ArrayList<>()).add(charge);
     }
+
 }
