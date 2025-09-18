@@ -60,7 +60,7 @@ public class GiftCardTest {
     }
 
     @Test
-    void tes07createsTwoGiftCardsCorrectly() {
+    void test07createsTwoGiftCardsCorrectly() {
         var card1 = gcMartina1000();
         var card2 = gcMartina100();
         assertAll(
