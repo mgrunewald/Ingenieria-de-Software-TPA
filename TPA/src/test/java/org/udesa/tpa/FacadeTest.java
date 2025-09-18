@@ -158,6 +158,110 @@ public class FacadeTest {
         );
     }
 
+
+
+    @Test
+    void test15merchantWithValidKeyCanChargeClaimedCardAndUpdatesBalanceAndStatement_noToken() {
+        var clock = new MutableClock(Instant.parse("2025-09-18T12:00:00Z"), ZoneId.of("UTC"));
+        var facade = new Facade(clock, Duration.ofMinutes(5));
+
+        facade.register("martina", "x");
+        facade.registerMerchant("mp", "cred");
+        facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
+
+        var token = facade.login("martina", "x");
+        facade.claim(token, "1"); // la tarjeta queda reclamada por algún usuario
+
+        facade.charge("mp", "cred", "1", 300, "cafe"); // overload SIN token
+
+        assertAll(
+                () -> assertEquals(700, facade.balance(token, "1")),
+                () -> assertEquals(1, facade.statement(token, "1").size()),
+                () -> assertEquals(300, facade.statement(token, "1").get(0).amount()),
+                () -> assertEquals("cafe", facade.statement(token, "1").get(0).description()),
+
+                () -> assertEquals(Instant.parse("2025-09-18T12:00:00Z"),
+                        facade.statement(token, "1").get(0).timestamp())
+        );
+    }
+
+    @Test
+    void test16rejectChargeOnUnclaimedCard_noToken() {
+        var facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
+
+        facade.register("martina", "x");
+        facade.registerMerchant("mp", "cred");
+        facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
+
+
+        assertThrows(IllegalArgumentException.class, () -> facade.charge("mp", "cred", "1", 100, "x"));
+    }
+
+    @Test
+    void test17rejectChargeFromUnknownMerchantKey_noToken() {
+        var facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
+
+        facade.register("martina", "x");
+        facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
+        var token = facade.login("martina", "x");
+        facade.claim(token, "1");
+
+        assertThrows(IllegalArgumentException.class, () -> facade.charge("desconocido", "cred", "1", 100, "x"));
+    }
+
+    @Test
+    void test18rejectNonPositiveChargeAmount_noToken() {
+        var facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
+
+        facade.register("martina", "x");
+        facade.registerMerchant("mp", "cred");
+        facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
+        var token = facade.login("martina", "x");
+        facade.claim(token, "1");
+
+        assertAll(
+                () -> assertThrows(IllegalArgumentException.class, () -> facade.charge("mp", "cred", "1", 0,  "x")),
+                () -> assertThrows(IllegalArgumentException.class, () -> facade.charge("mp", "cred", "1", -1, "x"))
+        );
+    }
+
+    @Test
+    void test19rejectChargeWithWrongMerchantCredential_noToken() {
+        var facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
+
+        facade.registerMerchant("mp", "cred-buena");
+        facade.register("martina", "x");
+        facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
+        var token = facade.login("martina", "x");
+        facade.claim(token, "1");
+
+        assertThrows(IllegalArgumentException.class, () -> facade.charge("mp", "cred-mala", "1", 100, "x"));
+    }
+
+    @Test
+    void test20merchantChargeWithTokenVariantAlsoWorks() {
+        var clock = new MutableClock(Instant.parse("2025-09-18T12:34:56Z"), ZoneId.of("UTC"));
+        var facade = new Facade(clock, Duration.ofMinutes(5));
+
+        facade.register("martina", "x");
+        facade.registerMerchant("mp", "cred");
+        facade.preloadGiftCard(new GiftCard("martina", "1", 500));
+
+        var token = facade.login("martina", "x");
+        facade.claim(token, "1");
+
+        facade.charge(token, "mp", "cred", "1", 200, "compra"); // variante CON token
+
+        assertAll(
+                () -> assertEquals(300, facade.balance(token, "1")),
+                () -> assertEquals(1, facade.statement(token, "1").size()),
+                () -> assertEquals(200, facade.statement(token, "1").get(0).amount()),
+                () -> assertEquals("compra", facade.statement(token, "1").get(0).description()),
+                () -> assertEquals(Instant.parse("2025-09-18T12:34:56Z"),
+                        facade.statement(token, "1").get(0).timestamp())
+        );
+    }
+
     // helper privado para balance total
     private static int totalBalance(Facade facade, String token) {
         return facade.myCards(token).stream()

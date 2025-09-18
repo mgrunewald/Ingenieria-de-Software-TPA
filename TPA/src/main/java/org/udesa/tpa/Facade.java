@@ -5,18 +5,26 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
-import static org.springframework.util.Assert.*;
+import static org.udesa.tpa.Utils.*;
 
+/**
+ * Fachada del sistema de Gift Cards.
+ * - Sin if/switch en la lógica: usamos Utils.ensure / Optional.
+ * - Sin frameworks en dominio.
+ * - Mantiene el diseño “por sesión”: claim por token.
+ * - Overload opcional de charge(...) sin token, alineado al enunciado.
+ */
 public final class Facade {
     private final Clock clock;
     private final Duration ttl;
 
-    private final Map<String, String> users = new HashMap<>(); // username -> password
-    private final Map<String, UserSession> sessionsByToken = new HashMap<>(); // token -> session
-    private final Map<String, GiftCard> giftCardsByNumber = new HashMap<>(); // cardNumber -> GiftCard
-    private final Map<String, Set<String>> claimsByToken = new HashMap<>(); // token -> set(cardNumber)
-    private final Map<String, Merchant> merchantsById = new HashMap<>();      // merchantId -> Merchant
-    private final Map<String, List<Charge>> chargesByCard = new HashMap<>();  // cardNumber -> charges
+    private final Map<String, String> users = new HashMap<>();
+    private final Map<String, UserSession> sessionsByToken = new HashMap<>();
+    private final Map<String, GiftCard> giftCardsByNumber = new HashMap<>();
+    private final Map<String, Set<String>> claimsByToken = new HashMap<>();
+    private final Map<String, Merchant> merchantsById = new HashMap<>();
+    private final Map<String, List<Charge>> chargesByCard = new HashMap<>();
+
 
     public static String NULL_CLOCK = "Clock can not be null";
     public static String NULL_TTL = "TTL can not be null";
@@ -26,79 +34,92 @@ public final class Facade {
     public static String GIFT_CARD_DOES_NOT_BELONG_TO_USER = "The gift card does not belong to the user";
     public static String UNCLAIMED_CARD = "This gift card has not been claimed in this session";
     public static String CLAIMED_CARD = "This gift card has been claimed in this session";
-    
+    public static String UNKNOWN_MERCHANT = "merchant desconocido";
+
     public Facade(Clock clock, Duration ttl) {
         this.clock = Objects.requireNonNull(clock, NULL_CLOCK);
         this.ttl = Objects.requireNonNull(ttl, NULL_TTL);
     }
 
+
+
     public void register(String username, String password) {
-        Utils.nonBlank(username, "username");
-        Utils.nonBlank(password, "password");
+        nonBlank(username, "username");
+        nonBlank(password, "password");
         String prev = users.putIfAbsent(username, password);
-        Utils.ensure(prev == null, REGISTERED);
+        ensure(prev == null, REGISTERED);
     }
 
     public boolean exists(String username) {
         return users.containsKey(username);
     }
 
-    private String requirePassword(String username) { //con esto saco los ifs en login
+    private String requirePassword(String username) {
         var pass = users.get(username);
-        Utils.nonBlank(pass, "username");
+        nonBlank(pass, "username");
         return pass;
     }
 
     public String login(String username, String password) {
         String realPass = requirePassword(username);
-        Utils.ensure(Objects.equals(realPass, password), WRONG_PASSWORD);
+        ensure(Objects.equals(realPass, password), WRONG_PASSWORD);
         var session = UserSession.issue(username, ttl, clock);
         sessionsByToken.put(session.token(), session);
         return session.token();
     }
 
     public boolean isSessionActive(String token) {
-        var session = sessionsByToken.get(token);
-        if (session == null) return false;
-        try {
-            session.ensureActive(clock);
-            return true;
-        } catch (IllegalArgumentException ex) {
-            return false;
-        }
+        // sin if: Optional + try/catch dentro del map
+        return Optional.ofNullable(sessionsByToken.get(token))
+                .map(s -> {
+                    try { s.ensureActive(clock); return true; }
+                    catch (IllegalArgumentException ex) { return false; }
+                })
+                .orElse(false);
     }
 
     private UserSession requireActiveSession(String token) {
-        var session = sessionsByToken.get(Utils.nonBlank(token, "token"));
-        notNull(session, NULL_OBJECT);
+        var session = Optional.ofNullable(sessionsByToken.get(nonBlank(token, "token")))
+                .orElseThrow(() -> new IllegalArgumentException(NULL_OBJECT));
         session.ensureActive(clock);
         return session;
     }
 
-    public void preloadGiftCard(GiftCard card) {
-        notNull(card, NULL_OBJECT);
-        Utils.nonBlank(card.cardNumber(), "cardNumber");
-        Utils.nonBlank(card.owner(), "owner");
 
+
+    public void preloadGiftCard(GiftCard card) {
+        Objects.requireNonNull(card, NULL_OBJECT);
+        nonBlank(card.cardNumber(), "cardNumber");
+        nonBlank(card.owner(), "owner");
         GiftCard prev = giftCardsByNumber.putIfAbsent(card.cardNumber(), card);
-        Utils.ensure(prev == null, REGISTERED);
+        ensure(prev == null, REGISTERED);
     }
 
     public void claim(String token, String cardNumber) {
         var session = requireActiveSession(token);
-        var card = giftCardsByNumber.get(cardNumber);
-        notNull(card, NULL_OBJECT);
-        Utils.ensure(card.owner().equals(session.username()), GIFT_CARD_DOES_NOT_BELONG_TO_USER);
+        var card = Optional.ofNullable(giftCardsByNumber.get(cardNumber))
+                .orElseThrow(() -> new IllegalArgumentException(NULL_OBJECT));
+        ensure(card.owner().equals(session.username()), GIFT_CARD_DOES_NOT_BELONG_TO_USER);
         boolean added = claimsByToken.computeIfAbsent(token, k -> new HashSet<>()).add(cardNumber);
-        Utils.ensure(added, CLAIMED_CARD);
+        ensure(added, CLAIMED_CARD);
     }
 
     private GiftCard requireClaimed(String token, String cardNumber) {
         var session = requireActiveSession(token);
-        var card = giftCardsByNumber.get(cardNumber);
-        notNull(card, NULL_OBJECT);
-        Utils.ensure(claimsByToken.getOrDefault(token, Set.of()).contains(cardNumber), UNCLAIMED_CARD);
-        Utils.ensure(card.owner().equals(session.username()), GIFT_CARD_DOES_NOT_BELONG_TO_USER);
+        var card = Optional.ofNullable(giftCardsByNumber.get(cardNumber))
+                .orElseThrow(() -> new IllegalArgumentException(NULL_OBJECT));
+        ensure(claimsByToken.getOrDefault(token, Set.of()).contains(cardNumber), UNCLAIMED_CARD);
+        ensure(card.owner().equals(session.username()), GIFT_CARD_DOES_NOT_BELONG_TO_USER);
+        return card;
+    }
+
+    private GiftCard requireClaimedByAnyUser(String cardNumber) {
+        var card = Optional.ofNullable(giftCardsByNumber.get(cardNumber))
+                .orElseThrow(() -> new IllegalArgumentException(NULL_OBJECT));
+        ensure(
+                claimsByToken.values().stream().anyMatch(set -> set.contains(cardNumber)),
+                UNCLAIMED_CARD
+        );
         return card;
     }
 
@@ -116,35 +137,49 @@ public final class Facade {
         return List.copyOf(chargesByCard.getOrDefault(cardNumber, List.of()));
     }
 
-    public int balance(String token, String cardNumber) {
-        return balanceOf(token, cardNumber);
-    }
 
-    public List<Charge> statement(String token, String cardNumber) {
-        return chargesOf(token, cardNumber);
-    }
+    public int balance(String token, String cardNumber) { return balanceOf(token, cardNumber); }
+    public List<Charge> statement(String token, String cardNumber) { return chargesOf(token, cardNumber); }
+
+
 
     public void registerMerchant(String id, String privateCredential) {
-        Utils.nonBlank(id, "id");
-        Utils.nonBlank(privateCredential, "privateCredential");
+        nonBlank(id, "id");
+        nonBlank(privateCredential, "privateCredential");
         Merchant prev = merchantsById.putIfAbsent(id, new Merchant(id, privateCredential));
-        Utils.ensure(prev == null, REGISTERED);
+        ensure(prev == null, REGISTERED);
     }
 
     private Merchant requireMerchant(String merchantId, String privateCredential) {
-        var merchant = merchantsById.get(merchantId);
-        notNull(merchant, NULL_OBJECT);
-        Utils.ensure(merchant.privateCredential().equals(privateCredential), "Credencial inválida");
+        var merchant = Optional.ofNullable(merchantsById.get(merchantId))
+                .orElseThrow(() -> new IllegalArgumentException(UNKNOWN_MERCHANT));
+        ensure(merchant.privateCredential().equals(privateCredential), "Credencial inválida");
         return merchant;
     }
 
-    public void charge(String token, String merchantId, String merchantCredential, String cardNumber, int amount, String description) {
+
+    public void charge(String token, String merchantId, String merchantCredential,
+                       String cardNumber, int amount, String description) {
+
         requireActiveSession(token);
         var merchant = requireMerchant(merchantId, merchantCredential);
         var card = requireClaimed(token, cardNumber);
-        card.charge(amount, description);
+
+        card.charge(amount, description); // valida monto/desc/saldo
         var charge = new Charge(card.cardNumber(), merchant.id(), amount, description, Instant.now(clock));
         chargesByCard.computeIfAbsent(cardNumber, k -> new ArrayList<>()).add(charge);
     }
 
+
+    public void charge(String merchantId, String merchantCredential,
+                       String cardNumber, int amount, String description) {
+
+        var merchant = requireMerchant(merchantId, merchantCredential);
+        var card = requireClaimedByAnyUser(cardNumber);
+
+        card.charge(amount, description);
+        var charge = new Charge(card.cardNumber(), merchant.id(), amount, description, Instant.now(clock));
+        chargesByCard.computeIfAbsent(cardNumber, k -> new ArrayList<>()).add(charge);
+    }
 }
+
