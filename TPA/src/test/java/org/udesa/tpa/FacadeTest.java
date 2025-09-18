@@ -30,7 +30,7 @@ public class FacadeTest {
     @Test
     void test03startsSessionCorrectly() {
         facade.register("martina", "12345678");
-        var token = facade.login("martina", "12345678");
+        String token = facade.login("martina", "12345678");
         assertAll(
                 () -> assertTrue(facade.isSessionActive(token)),
                 () -> assertNotNull(token)
@@ -56,16 +56,16 @@ public class FacadeTest {
 
     @Test
     void test07showsOnlyTheGiftCardsOfTheUser() {
-        var facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
+        Facade facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
         facade.register("martina", "12345678");
         facade.register("maxi", "abcdefgh");
         facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
         facade.preloadGiftCard(new GiftCard("martina", "2",  500));
         facade.preloadGiftCard(new GiftCard("maxi",    "3",  200));
-        var token = facade.login("martina", "12345678");
+        String token = facade.login("martina", "12345678");
         facade.claim(token, "1");
         facade.claim(token, "2");
-        var mine = facade.myCards(token);
+        List<String> mine = facade.myCards(token);
         assertAll(
                 () -> assertEquals(2, mine.size()),
                 () -> assertTrue(mine.contains("1")),
@@ -77,11 +77,11 @@ public class FacadeTest {
 
     @Test
     void test08doesNotOperateWithExpiredToken() {
-        var clock = new MutableClock(Instant.parse("2025-09-15T20:00:00Z"), ZoneId.of("UTC"));
-        var facade = new Facade(clock, Duration.ofMinutes(5));
+        MutableClock clock = new MutableClock(Instant.parse("2025-09-15T20:00:00Z"), ZoneId.of("UTC"));
+        Facade facade = new Facade(clock, Duration.ofMinutes(5));
         facade.register("martina", "x");
         facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
-        var token = facade.login("martina", "x");
+        String token = facade.login("martina", "x");
         facade.claim(token, "1");
 
         clock.plus(Duration.ofMinutes(6)); // expira
@@ -95,12 +95,12 @@ public class FacadeTest {
 
     @Test
     void test09showsDataOnlyIfTheUserIsTheOwner() {
-        var facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
+        Facade facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
         facade.register("martina", "12345678");
         facade.register("maxi", "abcdefgh");
         facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
         facade.preloadGiftCard(new GiftCard("maxi",    "2",  500));
-        var tMartina = facade.login("martina", "12345678");
+        String tMartina = facade.login("martina", "12345678");
         facade.claim(tMartina, "1");
 
         assertAll(
@@ -141,7 +141,7 @@ public class FacadeTest {
     @Test
     void test13canNotClaimACardMoreThanOnceOnTheSameSession() {
         facade.register("martina", "12345678");
-        var token = facade.login("martina", "12345678");
+        String token = facade.login("martina", "12345678");
         facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
         facade.claim(token, "1");
         assertThrows(IllegalArgumentException.class, () -> facade.claim(token, "1"));
@@ -150,7 +150,7 @@ public class FacadeTest {
     @Test
     void test14failsToReadBalanceOfAnUnclaimedCard() {
         facade.register("martina", "12345678");
-        var token = facade.login("martina", "12345678");
+        String token = facade.login("martina", "12345678");
         facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class, () -> facade.balance(token, "1")),

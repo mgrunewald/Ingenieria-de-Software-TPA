@@ -1,5 +1,6 @@
 package org.udesa.tpa;
 
+import jakarta.websocket.Session;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,8 +18,8 @@ class UserSessionTest {
 
     @Test
     void test01createsTokenAndSetsTTL() {
-        var ttl = Duration.ofMinutes(5);
-        var session = UserSession.issue("martina", ttl, clock);
+        Duration ttl = Duration.ofMinutes(5);
+        UserSession session = UserSession.issue("martina", ttl, clock);
         assertAll(
                 () -> assertNotNull(session.token()),
                 () -> assertEquals("martina", session.username()),
@@ -29,7 +30,7 @@ class UserSessionTest {
 
     @Test
     void test02sessionIsActiveAtFiveMinutesAndExpiresAfter() {
-        var session = UserSession.issue("martina", Duration.ofMinutes(5), clock);
+        UserSession session = UserSession.issue("martina", Duration.ofMinutes(5), clock);
 
         clock.plus(Duration.ofMinutes(4).plusSeconds(59));
         assertTrue(session.isActive(clock));
@@ -44,7 +45,7 @@ class UserSessionTest {
 
     @Test
     void test03raisesErrorWhenTokenIsExpired() {
-        var session = UserSession.issue("martina", Duration.ofMinutes(5), clock);
+        UserSession session = UserSession.issue("martina", Duration.ofMinutes(5), clock);
         clock.plus(Duration.ofMinutes(6));
         assertThrows(IllegalArgumentException.class, () -> session.ensureActive(clock));
     }
