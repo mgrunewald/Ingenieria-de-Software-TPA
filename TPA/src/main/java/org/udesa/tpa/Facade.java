@@ -18,16 +18,25 @@ public final class Facade {
     private final Map<String, Merchant> merchantsById = new HashMap<>();      // merchantId -> Merchant
     private final Map<String, List<Charge>> chargesByCard = new HashMap<>();  // cardNumber -> charges
 
+    public static String NULL_CLOCK = "Clock can not be null";
+    public static String NULL_TTL = "TTL can not be null";
+    public static String REGISTERED = "Already registered";
+    public static String WRONG_PASSWORD = "Password is incorrect";
+    public static String NULL_OBJECT = "Object can not be null";
+    public static String GIFT_CARD_DOES_NOT_BELONG_TO_USER = "The gift card does not belong to the user";
+    public static String UNCLAIMED_CARD = "This gift card has not been claimed in this session";
+    public static String CLAIMED_CARD = "This gift card has been claimed in this session";
+    
     public Facade(Clock clock, Duration ttl) {
-        this.clock = Objects.requireNonNull(clock, "Clock no puede ser nulo");
-        this.ttl = Objects.requireNonNull(ttl, "TTL no puede ser nulo");
+        this.clock = Objects.requireNonNull(clock, NULL_CLOCK);
+        this.ttl = Objects.requireNonNull(ttl, NULL_TTL);
     }
 
     public void register(String username, String password) {
         Utils.nonBlank(username, "username");
         Utils.nonBlank(password, "password");
         String prev = users.putIfAbsent(username, password);
-        Utils.ensure(prev == null, "Usuario ya registrado" );
+        Utils.ensure(prev == null, REGISTERED);
     }
 
     public boolean exists(String username) {
@@ -42,7 +51,7 @@ public final class Facade {
 
     public String login(String username, String password) {
         String realPass = requirePassword(username);
-        Utils.ensure(Objects.equals(realPass, password), "Password incorrecto");
+        Utils.ensure(Objects.equals(realPass, password), WRONG_PASSWORD);
         var session = UserSession.issue(username, ttl, clock);
         sessionsByToken.put(session.token(), session);
         return session.token();
@@ -60,36 +69,36 @@ public final class Facade {
     }
 
     private UserSession requireActiveSession(String token) {
-        var session = sessionsByToken.get(Objects.requireNonNull(token, "Token no puede ser nulo"));
-        notNull(session, "Token invalido");
+        var session = sessionsByToken.get(Utils.nonBlank(token, "token"));
+        notNull(session, NULL_OBJECT);
         session.ensureActive(clock);
         return session;
     }
 
     public void preloadGiftCard(GiftCard card) {
-        notNull(card, "Gift card nula");
+        notNull(card, NULL_OBJECT);
         Utils.nonBlank(card.cardNumber(), "cardNumber");
         Utils.nonBlank(card.owner(), "owner");
 
         GiftCard prev = giftCardsByNumber.putIfAbsent(card.cardNumber(), card);
-        Utils.ensure(prev == null, "Gift card ya registrado con ese número");
+        Utils.ensure(prev == null, REGISTERED);
     }
 
     public void claim(String token, String cardNumber) {
         var session = requireActiveSession(token);
         var card = giftCardsByNumber.get(cardNumber);
-        notNull(card, "Gift card inexistente");
-        Utils.ensure(card.owner().equals(session.username()), "Gift card no pertenece al usuario");
+        notNull(card, NULL_OBJECT);
+        Utils.ensure(card.owner().equals(session.username()), GIFT_CARD_DOES_NOT_BELONG_TO_USER);
         boolean added = claimsByToken.computeIfAbsent(token, k -> new HashSet<>()).add(cardNumber);
-        Utils.ensure(added, "Gift card ya reclamada en esta session");
+        Utils.ensure(added, CLAIMED_CARD);
     }
 
     private GiftCard requireClaimed(String token, String cardNumber) {
         var session = requireActiveSession(token);
         var card = giftCardsByNumber.get(cardNumber);
-        notNull(card, "Gift card inexistente");
-        Utils.ensure(claimsByToken.getOrDefault(token, Set.of()).contains(cardNumber), "La tarjeta no fue reclamada en esta sesión");
-        Utils.ensure(card.owner().equals(session.username()), "Gift card no pertenece al usuario");
+        notNull(card, NULL_OBJECT);
+        Utils.ensure(claimsByToken.getOrDefault(token, Set.of()).contains(cardNumber), UNCLAIMED_CARD);
+        Utils.ensure(card.owner().equals(session.username()), GIFT_CARD_DOES_NOT_BELONG_TO_USER);
         return card;
     }
 
@@ -119,12 +128,12 @@ public final class Facade {
         Utils.nonBlank(id, "id");
         Utils.nonBlank(privateCredential, "privateCredential");
         Merchant prev = merchantsById.putIfAbsent(id, new Merchant(id, privateCredential));
-        Utils.ensure(prev == null, "Merchant ya registrado");
+        Utils.ensure(prev == null, REGISTERED);
     }
 
     private Merchant requireMerchant(String merchantId, String privateCredential) {
         var merchant = merchantsById.get(merchantId);
-        notNull(merchant, "Merchant desconocido");
+        notNull(merchant, NULL_OBJECT);
         Utils.ensure(merchant.privateCredential().equals(privateCredential), "Credencial inválida");
         return merchant;
     }
