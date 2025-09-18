@@ -84,7 +84,7 @@ public class FacadeTest {
         String token = facade.login("martina", "x");
         facade.claim(token, "1");
 
-        clock.plus(Duration.ofMinutes(6)); // expira
+        clock.plus(Duration.ofMinutes(6));
         assertAll(
                 () -> assertFalse(facade.isSessionActive(token)),
                 () -> assertThrows(IllegalArgumentException.class, () -> facade.myCards(token)),
@@ -102,7 +102,6 @@ public class FacadeTest {
         facade.preloadGiftCard(new GiftCard("maxi",    "2",  500));
         String tMartina = facade.login("martina", "12345678");
         facade.claim(tMartina, "1");
-
         assertAll(
                 () -> assertEquals(1000, facade.balance(tMartina, "1")),
                 () -> assertEquals(0,    facade.statement(tMartina, "1").size()),
@@ -162,17 +161,17 @@ public class FacadeTest {
 
     @Test
     void test15merchantWithValidKeyCanChargeClaimedCardAndUpdatesBalanceAndStatement_noToken() {
-        var clock = new MutableClock(Instant.parse("2025-09-18T12:00:00Z"), ZoneId.of("UTC"));
-        var facade = new Facade(clock, Duration.ofMinutes(5));
+        MutableClock clock = new MutableClock(Instant.parse("2025-09-18T12:00:00Z"), ZoneId.of("UTC"));
+        Facade facade = new Facade(clock, Duration.ofMinutes(5));
 
         facade.register("martina", "x");
         facade.registerMerchant("mp", "cred");
         facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
 
-        var token = facade.login("martina", "x");
-        facade.claim(token, "1"); // la tarjeta queda reclamada por algún usuario
+        String token = facade.login("martina", "x");
+        facade.claim(token, "1");
 
-        facade.charge("mp", "cred", "1", 300, "cafe"); // overload SIN token
+        facade.charge("mp", "cred", "1", 300, "cafe");
 
         assertAll(
                 () -> assertEquals(700, facade.balance(token, "1")),
@@ -187,7 +186,7 @@ public class FacadeTest {
 
     @Test
     void test16rejectChargeOnUnclaimedCard_noToken() {
-        var facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
+        Facade facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
 
         facade.register("martina", "x");
         facade.registerMerchant("mp", "cred");
@@ -199,11 +198,11 @@ public class FacadeTest {
 
     @Test
     void test17rejectChargeFromUnknownMerchantKey_noToken() {
-        var facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
+        Facade facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
 
         facade.register("martina", "x");
         facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
-        var token = facade.login("martina", "x");
+        String token = facade.login("martina", "x");
         facade.claim(token, "1");
 
         assertThrows(IllegalArgumentException.class, () -> facade.charge("desconocido", "cred", "1", 100, "x"));
@@ -211,14 +210,12 @@ public class FacadeTest {
 
     @Test
     void test18rejectNonPositiveChargeAmount_noToken() {
-        var facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
-
+        Facade facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
         facade.register("martina", "x");
         facade.registerMerchant("mp", "cred");
         facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
-        var token = facade.login("martina", "x");
+        String token = facade.login("martina", "x");
         facade.claim(token, "1");
-
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class, () -> facade.charge("mp", "cred", "1", 0,  "x")),
                 () -> assertThrows(IllegalArgumentException.class, () -> facade.charge("mp", "cred", "1", -1, "x"))
@@ -227,12 +224,11 @@ public class FacadeTest {
 
     @Test
     void test19rejectChargeWithWrongMerchantCredential_noToken() {
-        var facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
-
+        Facade facade = new Facade(Clock.systemUTC(), Duration.ofMinutes(5));
         facade.registerMerchant("mp", "cred-buena");
         facade.register("martina", "x");
         facade.preloadGiftCard(new GiftCard("martina", "1", 1000));
-        var token = facade.login("martina", "x");
+        String token = facade.login("martina", "x");
         facade.claim(token, "1");
 
         assertThrows(IllegalArgumentException.class, () -> facade.charge("mp", "cred-mala", "1", 100, "x"));
@@ -240,17 +236,17 @@ public class FacadeTest {
 
     @Test
     void test20merchantChargeWithTokenVariantAlsoWorks() {
-        var clock = new MutableClock(Instant.parse("2025-09-18T12:34:56Z"), ZoneId.of("UTC"));
-        var facade = new Facade(clock, Duration.ofMinutes(5));
+        MutableClock clock = new MutableClock(Instant.parse("2025-09-18T12:34:56Z"), ZoneId.of("UTC"));
+        Facade facade = new Facade(clock, Duration.ofMinutes(5));
 
         facade.register("martina", "x");
         facade.registerMerchant("mp", "cred");
         facade.preloadGiftCard(new GiftCard("martina", "1", 500));
 
-        var token = facade.login("martina", "x");
+        String token = facade.login("martina", "x");
         facade.claim(token, "1");
 
-        facade.charge(token, "mp", "cred", "1", 200, "compra"); // variante CON token
+        facade.charge(token, "mp", "cred", "1", 200, "compra");
 
         assertAll(
                 () -> assertEquals(300, facade.balance(token, "1")),
