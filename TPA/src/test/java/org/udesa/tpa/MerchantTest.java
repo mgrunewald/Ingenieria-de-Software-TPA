@@ -5,7 +5,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.udesa.tpa.TestFixtures.*;
 
 public class MerchantTest {
 
@@ -18,16 +17,18 @@ public class MerchantTest {
         );
     }
 
-    @ParameterizedTest
-    @MethodSource("org.udesa.tpa.TestFixtures#blanks")
-    void test02failsMerchantWithInvalidId(String invalid) {
-        assertThrows(IllegalArgumentException.class, () -> new Merchant(invalid, "cred"));
+    @Test
+    void test02failsMerchantWithInvalidId(){
+        assertThrows(IllegalArgumentException.class, () -> new Merchant("", "cred"));
+        assertThrows(IllegalArgumentException.class, () -> new Merchant(" ", "cred"));
+        assertThrows(IllegalArgumentException.class, () -> new Merchant(null, "cred"));
     }
 
-    @ParameterizedTest
-    @MethodSource("org.udesa.tpa.TestFixtures#blanks")
-    void test03failsMerchantWithInvalidPrivateCredential(String invalid) {
-        assertThrows(IllegalArgumentException.class, () -> new Merchant("mercado-pago", invalid));
+    @Test
+    void test03failsMerchantWithInvalidPrivateCredential(){
+        assertThrows(IllegalArgumentException.class, () -> new Merchant("mercado-pago", ""));
+        assertThrows(IllegalArgumentException.class, () -> new Merchant("mercado-pago", " "));
+        assertThrows(IllegalArgumentException.class, () -> new Merchant("mercado-pago", null));
     }
 
     @Test

@@ -157,8 +157,6 @@ public class FacadeTest {
         );
     }
 
-
-
     @Test
     void test15merchantWithValidKeyCanChargeClaimedCardAndUpdatesBalanceAndStatement_noToken() {
         MyClock clock = new MyClock(Instant.parse("2025-09-18T12:00:00Z"), ZoneId.of("UTC"));

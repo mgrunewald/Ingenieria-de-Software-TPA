@@ -6,10 +6,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.udesa.tpa.TestFixtures.*;
 
 public class GiftCardTest {
     private GiftCard card;
+
+    private static GiftCard gcMartina1000() { return new GiftCard("martina", "1", 1000); }
+    private static GiftCard gcMartina100()  { return new GiftCard("martina", "2",   100); }
 
     @BeforeEach
     void createCard() {
@@ -74,16 +76,19 @@ public class GiftCardTest {
         assertThrows(IllegalArgumentException.class, () -> card.charge(100, ""));
     }
 
-    @ParameterizedTest
-    @MethodSource("org.udesa.tpa.TestFixtures#blanks")
-    void test09failsToCreateGiftCardWithInvalidOwner(String invalid) {
-        assertThrows(IllegalArgumentException.class, () -> new GiftCard(invalid, "1", 100));
+    @Test
+    void test09failsToCreateGiftCardWithInvalidOwner(){
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard("", "1", 100));
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard(" ", "1", 100));
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard(null, "1", 100));
+
     }
 
-    @ParameterizedTest
-    @MethodSource("org.udesa.tpa.TestFixtures#blanks")
-    void test10failsToCreateGiftCardWithInvalidCardNumber(String invalid) {
-        assertThrows(IllegalArgumentException.class, () -> new GiftCard("martina", invalid, 100));
+    @Test
+    void test10failsToCreateGiftCardWithInvalidCardNumber(){
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard("martina", "", 100));
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard("martina", " ", 100));
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard("martina", null, 100));
     }
 
     @Test

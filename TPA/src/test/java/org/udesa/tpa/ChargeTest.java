@@ -4,10 +4,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.time.Instant;
+
 import static org.junit.jupiter.api.Assertions.*;
-import static org.udesa.tpa.TestFixtures.*;
 
 public class ChargeTest {
+
+    private static Instant now() {return Instant.parse("2025-09-18T12:00:00Z");};
 
     @Test
     void test01createsValidCharge() {
@@ -29,16 +32,18 @@ public class ChargeTest {
         );
     }
 
-    @ParameterizedTest
-    @MethodSource("org.udesa.tpa.TestFixtures#blanks")
-    void test03failsOnInvalidMerchantId(String invalid) {
-        assertThrows(IllegalArgumentException.class, () -> new Charge("1", invalid, 300, "cafe", now()));
+    @Test
+    void test03failsOnInvalidMerchantId(){
+        assertThrows(IllegalArgumentException.class, () -> new Charge("1", "", 300, "cafe", now()));
+        assertThrows(IllegalArgumentException.class, () -> new Charge("1", " ", 300, "cafe", now()));
+        assertThrows(IllegalArgumentException.class, () -> new Charge("1", null, 300, "cafe", now()));
     }
 
-    @ParameterizedTest
-    @MethodSource("org.udesa.tpa.TestFixtures#blanks")
-    void test04failsOnInvalidDescription(String invalid) {
-        assertThrows(IllegalArgumentException.class, () -> new Charge("1", "mp", 300, invalid, now()));
+    @Test
+    void test04failsOnInvalidDescription(){
+        assertThrows(IllegalArgumentException.class, () -> new Charge("1", "mp", 300, "", now()));
+        assertThrows(IllegalArgumentException.class, () -> new Charge("1", "mp", 300, " ", now()));
+        assertThrows(IllegalArgumentException.class, () -> new Charge("1", "mp", 300, null, now()));
     }
 
     @Test
@@ -53,7 +58,7 @@ public class ChargeTest {
     @Test
     void test06differentTimestampsMeanDifferentCharges() {
         var c1 = new Charge("1", "mercado-pago", 300, "cafe", now());
-        var c2 = new Charge("1", "mercado-pago", 300, "cafe", oneSecondLater());
+        var c2 = new Charge("1", "mercado-pago", 300, "cafe", now().plusSeconds(1));
         assertNotEquals(c1, c2);
     }
 }
