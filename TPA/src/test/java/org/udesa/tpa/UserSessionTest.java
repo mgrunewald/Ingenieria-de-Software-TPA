@@ -9,11 +9,11 @@ import java.time.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserSessionTest {
-    private MutableClock clock;
+    private MyClock clock;
 
     @BeforeEach
-    void setUp() {
-        clock = new MutableClock(Instant.parse("2025-09-15T20:00:00Z"), ZoneId.of("UTC"));
+    void createClock() {
+        clock = new MyClock(Instant.parse("2025-09-15T20:00:00Z"), ZoneId.of("UTC"));
     }
 
     @Test
