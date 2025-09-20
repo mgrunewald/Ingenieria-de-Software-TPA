@@ -1,8 +1,9 @@
 package org.udesa.tpa;
+import static org.udesa.tpa.Utils.*;
 
 public record Merchant(String id, String privateCredential) {
     public Merchant {
-        Utils.nonBlank(id, "id");
-        Utils.nonBlank(privateCredential, "privateCredential");
+        nonBlank(id, "id");
+        nonBlank(privateCredential, "privateCredential");
     }
 }

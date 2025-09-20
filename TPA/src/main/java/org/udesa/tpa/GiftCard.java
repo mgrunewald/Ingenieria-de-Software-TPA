@@ -1,6 +1,7 @@
 package org.udesa.tpa;
 
 import java.util.Optional;
+import static org.udesa.tpa.Utils.*;
 
 public class GiftCard {
     private final String owner;
@@ -13,21 +14,21 @@ public class GiftCard {
 
 
     public GiftCard(String owner, String cardNumber, int initialBalance) {
-        this.owner = Utils.nonBlank(owner, "owner");
-        this.cardNumber = Utils.nonBlank(cardNumber, "cardNumber");
+        this.owner = nonBlank(owner, "owner");
+        this.cardNumber = nonBlank(cardNumber, "cardNumber");
         this.balance = Optional.of(initialBalance)
                 .filter(v -> v >= 0)
                 .orElseThrow(() -> new IllegalArgumentException(NEGATIVE_INITIAL_BALANCE));
     }
 
     public void addBalance(int amount) {
-        Utils.ensure(amount > 0, VALUE_MUST_BE_POSITIVE);
+        ensure(amount > 0, VALUE_MUST_BE_POSITIVE);
         balance += amount;
     }
 
     public void charge(int amount, String description) {
-        Utils.ensure(amount > 0, VALUE_MUST_BE_POSITIVE);
-        Utils.nonBlank(description, "description");
+        ensure(amount > 0, VALUE_MUST_BE_POSITIVE);
+        nonBlank(description, "description");
 
         balance = Optional.of(balance - amount)
                 .filter(v -> v >= 0)

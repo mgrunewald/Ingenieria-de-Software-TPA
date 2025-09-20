@@ -4,6 +4,7 @@ import java.time.*;
 import java.util.UUID;
 
 import static org.springframework.util.Assert.*;
+import static org.udesa.tpa.Utils.*;
 
 public final class UserSession {
     private final String token;
@@ -21,18 +22,18 @@ public final class UserSession {
     private UserSession(String token, String username, Instant issuedAt, Instant expiresAt) {
         notNull(issuedAt, NULL_INSTANT);
         notNull(expiresAt, NULL_INSTANT);
-        this.token = Utils.nonBlank(token, "token");
-        this.username = Utils.nonBlank(username, "username");
+        this.token = nonBlank(token, "token");
+        this.username = nonBlank(username, "username");
         this.issuedAt = issuedAt;
         this.expiresAt = expiresAt;
         this.ttl = Duration.between(issuedAt, expiresAt);
     }
 
     public static UserSession issue(String username, Duration ttl, Clock clock) {
-        Utils.nonBlank(username, "username");
+        nonBlank(username, "username");
         notNull(ttl, NULL_DURATION);
         notNull(clock, NULL_CLOCK);
-        Utils.ensure(!ttl.isNegative() && !ttl.isZero(), INVALID_TTL);
+        ensure(!ttl.isNegative() && !ttl.isZero(), INVALID_TTL);
 
         Instant now = Instant.now(clock);
         String token = UUID.randomUUID().toString();
@@ -46,7 +47,7 @@ public final class UserSession {
 
     public void ensureActive(Clock clock) {
         notNull(clock, NULL_CLOCK);
-        Utils.ensure(!Instant.now(clock).isAfter(expiresAt), EXPIRED_TOKEN);
+        ensure(!Instant.now(clock).isAfter(expiresAt), EXPIRED_TOKEN);
     }
 
     public String token()     { return token; }

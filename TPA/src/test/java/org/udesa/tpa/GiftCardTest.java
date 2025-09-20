@@ -2,16 +2,14 @@ package org.udesa.tpa;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-
+import static org.udesa.tpa.FacadeTest.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GiftCardTest {
     private GiftCard card;
 
-    private static GiftCard gcMartina1000() { return new GiftCard("martina", "1", 1000); }
-    private static GiftCard gcMartina100()  { return new GiftCard("martina", "2",   100); }
+    private static GiftCard gcMartina1000() { return new GiftCard(USER_1, CARD_NUMBER_1, 1000); }
+    private static GiftCard gcMartina100()  { return new GiftCard(USER_1, CARD_NUMBER_2,   100); }
 
     @BeforeEach
     void createCard() {
@@ -21,7 +19,7 @@ public class GiftCardTest {
     @Test
     void test01createsGiftCardCorrectlyWithOwnerAndInitialBalance() {
         assertAll(
-                () -> assertEquals("martina", card.owner()),
+                () -> assertEquals(USER_1, card.owner()),
                 () -> assertEquals(1000, card.balance())
         );
     }
@@ -30,19 +28,19 @@ public class GiftCardTest {
     void test02initialBalanceIsNotNegative() {
         assertAll(
                 () -> assertEquals(1000, card.balance()),
-                () -> assertThrows(IllegalArgumentException.class, () -> new GiftCard("martina", "1", -3))
+                () -> assertThrows(IllegalArgumentException.class, () -> new GiftCard(USER_1, CARD_NUMBER_1, -3))
         );
     }
 
     @Test
     void test03chargesCorrectly() {
-        card.charge(500, "kiosco");
+        card.charge(500, CHARGE_DESCRIPTION);
         assertEquals(500, card.balance());
     }
 
     @Test
     void test04cantChargeMoreThanBalance() {
-        assertThrows(IllegalArgumentException.class, () -> card.charge(2000, "kiosco"));
+        assertThrows(IllegalArgumentException.class, () -> card.charge(2000, CHARGE_DESCRIPTION));
     }
 
     @Test
@@ -50,8 +48,8 @@ public class GiftCardTest {
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class, () -> card.addBalance(0)),
                 () -> assertThrows(IllegalArgumentException.class, () -> card.addBalance(-500)),
-                () -> assertThrows(IllegalArgumentException.class, () -> card.charge(0, "nada")),
-                () -> assertThrows(IllegalArgumentException.class, () -> card.charge(-500, "nada"))
+                () -> assertThrows(IllegalArgumentException.class, () -> card.charge(0, CHARGE_DESCRIPTION)),
+                () -> assertThrows(IllegalArgumentException.class, () -> card.charge(-500, CHARGE_DESCRIPTION))
         );
     }
 
@@ -63,8 +61,8 @@ public class GiftCardTest {
 
     @Test
     void test07createsTwoGiftCardsCorrectly() {
-        var card1 = gcMartina1000();
-        var card2 = gcMartina100();
+        GiftCard card1 = gcMartina1000();
+        GiftCard card2 = gcMartina100();
         assertAll(
                 () -> assertEquals(1000, card1.balance()),
                 () -> assertEquals(100,   card2.balance())
@@ -78,29 +76,29 @@ public class GiftCardTest {
 
     @Test
     void test09failsToCreateGiftCardWithInvalidOwner(){
-        assertThrows(IllegalArgumentException.class, () -> new GiftCard("", "1", 100));
-        assertThrows(IllegalArgumentException.class, () -> new GiftCard(" ", "1", 100));
-        assertThrows(IllegalArgumentException.class, () -> new GiftCard(null, "1", 100));
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard("", CARD_NUMBER_1, 100));
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard(" ", CARD_NUMBER_1, 100));
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard(null, CARD_NUMBER_1, 100));
 
     }
 
     @Test
     void test10failsToCreateGiftCardWithInvalidCardNumber(){
-        assertThrows(IllegalArgumentException.class, () -> new GiftCard("martina", "", 100));
-        assertThrows(IllegalArgumentException.class, () -> new GiftCard("martina", " ", 100));
-        assertThrows(IllegalArgumentException.class, () -> new GiftCard("martina", null, 100));
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard(USER_1, "", 100));
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard(USER_1, " ", 100));
+        assertThrows(IllegalArgumentException.class, () -> new GiftCard(USER_1, null, 100));
     }
 
     @Test
     void test11chargeEqualToBalanceSetsBalanceToZero() {
-        card.charge(1000, "todo");
+        card.charge(1000, CHARGE_DESCRIPTION);
         assertEquals(0, card.balance());
     }
 
     @Test
     void test12addThenChargeReturnsToOriginalBalance() {
-        card.addBalance(500);    // 1500
-        card.charge(500, "x");   // 1000
+        card.addBalance(500);
+        card.charge(500, CHARGE_DESCRIPTION);
         assertEquals(1000, card.balance());
     }
 }

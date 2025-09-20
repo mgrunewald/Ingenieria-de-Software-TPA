@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.*;
-
+import static org.udesa.tpa.FacadeTest.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserSessionTest {
@@ -18,10 +18,10 @@ class UserSessionTest {
     @Test
     void test01createsTokenAndSetsTTL() {
         Duration ttl = Duration.ofMinutes(5);
-        UserSession session = UserSession.issue("martina", ttl, clock);
+        UserSession session = UserSession.issue(USER_1, ttl, clock);
         assertAll(
                 () -> assertNotNull(session.token()),
-                () -> assertEquals("martina", session.username()),
+                () -> assertEquals(USER_1, session.username()),
                 () -> assertEquals(clock.instant().plus(ttl), session.issuedAt().plus(ttl)),
                 () -> assertTrue(session.isActive(clock))
         );
@@ -29,7 +29,7 @@ class UserSessionTest {
 
     @Test
     void test02sessionIsActiveAtFiveMinutesAndExpiresAfter() {
-        UserSession session = UserSession.issue("martina", Duration.ofMinutes(5), clock);
+        UserSession session = UserSession.issue(USER_1, Duration.ofMinutes(5), clock);
 
         clock.plus(Duration.ofMinutes(4).plusSeconds(59));
         assertTrue(session.isActive(clock));
@@ -44,7 +44,7 @@ class UserSessionTest {
 
     @Test
     void test03raisesErrorWhenTokenIsExpired() {
-        UserSession session = UserSession.issue("martina", Duration.ofMinutes(5), clock);
+        UserSession session = UserSession.issue(USER_1, Duration.ofMinutes(5), clock);
         clock.plus(Duration.ofMinutes(6));
         assertThrows(IllegalArgumentException.class, () -> session.ensureActive(clock));
     }
@@ -54,9 +54,9 @@ class UserSessionTest {
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class, () -> UserSession.issue(null, Duration.ofMinutes(5), clock)),
                 () -> assertThrows(IllegalArgumentException.class, () -> UserSession.issue("  ", Duration.ofMinutes(5), clock)),
-                () -> assertThrows(IllegalArgumentException.class, () -> UserSession.issue("martina", Duration.ZERO, clock)),
-                () -> assertThrows(IllegalArgumentException.class, () -> UserSession.issue("martina", Duration.ofMinutes(-1), clock)),
-                () -> assertThrows(IllegalArgumentException.class, () -> UserSession.issue("martina", Duration.ofMinutes(5), null))
+                () -> assertThrows(IllegalArgumentException.class, () -> UserSession.issue(USER_1, Duration.ZERO, clock)),
+                () -> assertThrows(IllegalArgumentException.class, () -> UserSession.issue(USER_1, Duration.ofMinutes(-1), clock)),
+                () -> assertThrows(IllegalArgumentException.class, () -> UserSession.issue(USER_1, Duration.ofMinutes(5), null))
         );
     }
 }

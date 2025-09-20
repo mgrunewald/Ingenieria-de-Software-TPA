@@ -1,11 +1,9 @@
 package org.udesa.tpa;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.Instant;
-
+import static org.udesa.tpa.FacadeTest.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ChargeTest {
@@ -14,12 +12,12 @@ public class ChargeTest {
 
     @Test
     void test01createsValidCharge() {
-        var charge = new Charge("1", "mercado-pago", 300, "cafe de havanna", now());
+        Charge charge = new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, CHARGE_DESCRIPTION, now());
         assertAll(
-                () -> assertEquals("1", charge.cardNumber()),
-                () -> assertEquals("mercado-pago", charge.merchantId()),
+                () -> assertEquals(CARD_NUMBER_1, charge.cardNumber()),
+                () -> assertEquals(MERCHANT_ID_1, charge.merchantId()),
                 () -> assertEquals(300, charge.amount()),
-                () -> assertEquals("cafe de havanna", charge.description()),
+                () -> assertEquals(CHARGE_DESCRIPTION, charge.description()),
                 () -> assertEquals(now(), charge.timestamp())
         );
     }
@@ -27,38 +25,38 @@ public class ChargeTest {
     @Test
     void test02canNotChargeAmountZeroOrNegative() {
         assertAll(
-                () -> assertThrows(IllegalArgumentException.class, () -> new Charge("1", "mp", 0,   "kiosco", now())),
-                () -> assertThrows(IllegalArgumentException.class, () -> new Charge("1", "mp", -3,  "kiosco", now()))
+                () -> assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 0,   CHARGE_DESCRIPTION, now())),
+                () -> assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, -3,  CHARGE_DESCRIPTION, now()))
         );
     }
 
     @Test
     void test03failsOnInvalidMerchantId(){
-        assertThrows(IllegalArgumentException.class, () -> new Charge("1", "", 300, "cafe", now()));
-        assertThrows(IllegalArgumentException.class, () -> new Charge("1", " ", 300, "cafe", now()));
-        assertThrows(IllegalArgumentException.class, () -> new Charge("1", null, 300, "cafe", now()));
+        assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, "", 300, CHARGE_DESCRIPTION, now()));
+        assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, " ", 300, CHARGE_DESCRIPTION, now()));
+        assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, null, 300, CHARGE_DESCRIPTION, now()));
     }
 
     @Test
     void test04failsOnInvalidDescription(){
-        assertThrows(IllegalArgumentException.class, () -> new Charge("1", "mp", 300, "", now()));
-        assertThrows(IllegalArgumentException.class, () -> new Charge("1", "mp", 300, " ", now()));
-        assertThrows(IllegalArgumentException.class, () -> new Charge("1", "mp", 300, null, now()));
+        assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, "", now()));
+        assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, " ", now()));
+        assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, null, now()));
     }
 
     @Test
     void test05cardNumberMustBeOnlyDigits() {
         assertAll(
-                () -> assertThrows(IllegalArgumentException.class, () -> new Charge("a",  "mp", 1000, "kiosco", now())),
-                () -> assertThrows(IllegalArgumentException.class, () -> new Charge("a1", "mp", 1000, "kiosco", now())),
-                () -> assertThrows(IllegalArgumentException.class, () -> new Charge("-1", "mp", 1000, "kiosco", now()))
+                () -> assertThrows(IllegalArgumentException.class, () -> new Charge("a",  MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now())),
+                () -> assertThrows(IllegalArgumentException.class, () -> new Charge("a1", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now())),
+                () -> assertThrows(IllegalArgumentException.class, () -> new Charge("-1", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()))
         );
     }
 
     @Test
     void test06differentTimestampsMeanDifferentCharges() {
-        var c1 = new Charge("1", "mercado-pago", 300, "cafe", now());
-        var c2 = new Charge("1", "mercado-pago", 300, "cafe", now().plusSeconds(1));
-        assertNotEquals(c1, c2);
+        Charge charge1 = new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, CHARGE_DESCRIPTION, now());
+        Charge charge2 = new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, CHARGE_DESCRIPTION, now().plusSeconds(1));
+        assertNotEquals(charge1, charge2);
     }
 }

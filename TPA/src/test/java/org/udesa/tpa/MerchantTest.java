@@ -1,45 +1,42 @@
 package org.udesa.tpa;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-
 import static org.junit.jupiter.api.Assertions.*;
-
+import static org.udesa.tpa.FacadeTest.*;
 public class MerchantTest {
 
     @Test
     void test01createsMerchantCorrectly() {
-        var m = new Merchant("mercado-pago", "galperin123");
+        Merchant merchant = new Merchant(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1);
         assertAll(
-                () -> assertEquals("mercado-pago", m.id()),
-                () -> assertEquals("galperin123", m.privateCredential())
+                () -> assertEquals(MERCHANT_ID_1, merchant.id()),
+                () -> assertEquals(MERCHANT_CREDENTIAL_1, merchant.privateCredential())
         );
     }
 
     @Test
     void test02failsMerchantWithInvalidId(){
-        assertThrows(IllegalArgumentException.class, () -> new Merchant("", "cred"));
-        assertThrows(IllegalArgumentException.class, () -> new Merchant(" ", "cred"));
-        assertThrows(IllegalArgumentException.class, () -> new Merchant(null, "cred"));
+        assertThrows(IllegalArgumentException.class, () -> new Merchant("", MERCHANT_CREDENTIAL_1));
+        assertThrows(IllegalArgumentException.class, () -> new Merchant(" ", MERCHANT_CREDENTIAL_1));
+        assertThrows(IllegalArgumentException.class, () -> new Merchant(null, MERCHANT_CREDENTIAL_1));
     }
 
     @Test
     void test03failsMerchantWithInvalidPrivateCredential(){
-        assertThrows(IllegalArgumentException.class, () -> new Merchant("mercado-pago", ""));
-        assertThrows(IllegalArgumentException.class, () -> new Merchant("mercado-pago", " "));
-        assertThrows(IllegalArgumentException.class, () -> new Merchant("mercado-pago", null));
+        assertThrows(IllegalArgumentException.class, () -> new Merchant(MERCHANT_ID_1, ""));
+        assertThrows(IllegalArgumentException.class, () -> new Merchant(MERCHANT_ID_1, " "));
+        assertThrows(IllegalArgumentException.class, () -> new Merchant(MERCHANT_ID_1, null));
     }
 
     @Test
     void test04createsDifferentMerchants() {
-        var m1 = new Merchant("mercado-pago", "galperin123");
-        var m2 = new Merchant("uala", "uala123");
+        Merchant merchant1 = new Merchant(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1);
+        Merchant merchant2 = new Merchant(MERCHANT_ID_2, MERCHANT_CREDENTIAL_2);
         assertAll(
-                () -> assertEquals("mercado-pago", m1.id()),
-                () -> assertEquals("uala", m2.id()),
-                () -> assertEquals("galperin123", m1.privateCredential()),
-                () -> assertEquals("uala123", m2.privateCredential())
+                () -> assertEquals(MERCHANT_ID_1, merchant1.id()),
+                () -> assertEquals(MERCHANT_ID_2, merchant2.id()),
+                () -> assertEquals(MERCHANT_CREDENTIAL_1, merchant1.privateCredential()),
+                () -> assertEquals(MERCHANT_CREDENTIAL_2, merchant2.privateCredential())
         );
     }
 }
