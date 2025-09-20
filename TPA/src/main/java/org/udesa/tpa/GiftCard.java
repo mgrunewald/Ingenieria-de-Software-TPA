@@ -3,15 +3,15 @@ package org.udesa.tpa;
 import java.util.Optional;
 import static org.udesa.tpa.Utils.*;
 import static org.udesa.tpa.Facade.*;
+import static org.udesa.tpa.Charge.*;
 
 public class GiftCard {
     private final String owner;
     private final String cardNumber;
     private int balance;
 
-    public static String VALUE_MUST_BE_POSITIVE = "Amount must be a positive number";
     public static String NEGATIVE_INITIAL_BALANCE = "Initial Balance must be a positive number";
-    public static String INSUFFICIENT_FUNDS = "Initial Balance must be a positive number";
+    public static String INSUFFICIENT_FUNDS = "Charging amount must be less than the card's balance";
 
 
     public GiftCard(String owner, String cardNumber, int initialBalance) {
@@ -23,12 +23,12 @@ public class GiftCard {
     }
 
     public void addBalance(int amount) {
-        ensure(amount > 0, VALUE_MUST_BE_POSITIVE);
+        ensure(amount > 0, INVALID_AMOUNT);
         balance += amount;
     }
 
     public void charge(int amount, String description) {
-        ensure(amount > 0, VALUE_MUST_BE_POSITIVE);
+        ensure(amount > 0, INVALID_AMOUNT);
         nonBlank(description, NULL_OR_EMPTY_VALUE);
 
         balance = Optional.of(balance - amount)

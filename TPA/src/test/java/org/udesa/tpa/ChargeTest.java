@@ -24,8 +24,8 @@ public class ChargeTest {
 
     @Test
     void test02canNotChargeAmountZeroOrNegative() {
-        assertThrowsLike( () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 0, CHARGE_DESCRIPTION, now()), VALUE_GREATER_THAN_ZERO);
-        assertThrowsLike(() -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, -3,  CHARGE_DESCRIPTION, now()), VALUE_GREATER_THAN_ZERO);
+        assertThrowsLike( () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 0, CHARGE_DESCRIPTION, now()), INVALID_AMOUNT);
+        assertThrowsLike(() -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, -3,  CHARGE_DESCRIPTION, now()), INVALID_AMOUNT);
     }
 
     @Test
@@ -44,10 +44,10 @@ public class ChargeTest {
 
     @Test
     void test05cardNumberMustBeOnlyDigits() {
-     assertThrows(IllegalArgumentException.class, () -> new Charge("a",  MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), VALUE_MUST_BE_NUMERIC);
-     assertThrowsLike(  () -> new Charge("a1", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), VALUE_MUST_BE_NUMERIC);
-     assertThrowsLike( () -> new Charge("-1", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), VALUE_MUST_BE_NUMERIC);
-     assertThrowsLike( () -> new Charge("#$%7", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), VALUE_MUST_BE_NUMERIC);
+     assertThrows(IllegalArgumentException.class, () -> new Charge("a",  MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), CARD_NUMBER_MUST_BE_A_NUMERIC_STRING);
+     assertThrowsLike(  () -> new Charge("a1", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), CARD_NUMBER_MUST_BE_A_NUMERIC_STRING);
+     assertThrowsLike( () -> new Charge("-1", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), CARD_NUMBER_MUST_BE_A_NUMERIC_STRING);
+     assertThrowsLike( () -> new Charge("#$%7", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), CARD_NUMBER_MUST_BE_A_NUMERIC_STRING);
     }
 
     @Test

@@ -60,24 +60,30 @@ public final class Facade {
     }
 
     public boolean isSessionActive(String token) {
-        return Optional.ofNullable(sessionsByToken.get(token))
-                .map(s -> {
-                    try { s.ensureActive(clock); return true; }
-                    catch (IllegalArgumentException ex) { return false; }
-                })
-                .orElse(false);
+        UserSession session = sessionsByToken.get(token);
+        if (session == null) {
+            return false;
+        }
+        try {
+            session.ensureActive(clock);
+            return true;
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
     }
 
     private UserSession requireActiveSession(String token) {
-        UserSession session = Optional.ofNullable(sessionsByToken.get(nonBlank(token, NULL_OR_EMPTY_VALUE)))
-                .orElseThrow(() -> new IllegalArgumentException(NULL_OBJECT));
+        String nonEmptyToken = nonBlank(token, NULL_OR_EMPTY_VALUE);
+        UserSession session = sessionsByToken.get(nonEmptyToken);
+        if (session == null) { throw new IllegalArgumentException(NULL_OBJECT); }
         session.ensureActive(clock);
         return session;
     }
 
     private GiftCard requireCard(String cardNumber) {
-        return Optional.ofNullable(giftCardsByNumber.get(cardNumber))
-                .orElseThrow(() -> new IllegalArgumentException(UNKNOWN_CARD));
+        GiftCard card = giftCardsByNumber.get(cardNumber);
+        if (card == null) { throw new IllegalArgumentException(UNKNOWN_CARD); }
+        return card;
     }
 
     public void claim(String token, String cardNumber) {
@@ -97,8 +103,8 @@ public final class Facade {
     }
 
     private GiftCard requireClaimedByAnyUser(String cardNumber) {
-        GiftCard card = Optional.ofNullable(giftCardsByNumber.get(cardNumber))
-                .orElseThrow(() -> new IllegalArgumentException(NULL_OBJECT));
+        GiftCard card = giftCardsByNumber.get(cardNumber);
+        if (card == null) { throw new IllegalArgumentException(NULL_OBJECT); }
         ensure(claimsByToken.values().stream().anyMatch(set -> set.contains(cardNumber)), UNCLAIMED_CARD);
         return card;
     }
@@ -121,8 +127,8 @@ public final class Facade {
     public List<Charge> statement(String token, String cardNumber) { return chargesOf(token, cardNumber); }
 
     private Merchant requireMerchant(String merchantId, String privateCredential) {
-        Merchant merchant = Optional.ofNullable(merchantsById.get(merchantId))
-                .orElseThrow(() -> new IllegalArgumentException(UNKNOWN_MERCHANT));
+        Merchant merchant = merchantsById.get(merchantId);
+        if (merchant == null) { throw new IllegalArgumentException(UNKNOWN_MERCHANT); }
         ensure(merchant.privateCredential().equals(privateCredential), NULL_OR_EMPTY_VALUE);
         return merchant;
     }
@@ -130,9 +136,10 @@ public final class Facade {
     public void charge(String merchantId, String merchantCredential, String cardNumber, int amount, String description) {
         Merchant merchant = requireMerchant(merchantId, merchantCredential);
         GiftCard card = requireClaimedByAnyUser(cardNumber);
+        ensure(amount > 0, Charge.INVALID_AMOUNT);
+        nonBlank(description, NULL_OR_EMPTY_VALUE);
         card.charge(amount, description);
         Charge charge = new Charge(card.cardNumber(), merchant.id(), amount, description, Instant.now(clock));
         chargesByCard.computeIfAbsent(cardNumber, k -> new ArrayList<>()).add(charge);
     }
 }
-// BORRAR OFNULLABLE Y AGREGAR IFS

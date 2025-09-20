@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import static org.udesa.tpa.Facade.*;
 import static org.udesa.tpa.UserSession.*;
-import static org.udesa.tpa.GiftCard.*;
+import static org.udesa.tpa.Charge.*;
 
 import java.time.*;
 import java.util.List;
@@ -201,8 +201,8 @@ public class FacadeTest {
         createFacadeForDatabaseWithOnlyOneUserCardAndMerchant(Clock.systemUTC());
         String token = facade.login(USER_1, PASSWORD_1);
         facade.claim(token, CARD_NUMBER_1);
-        assertThrowsLike(() -> facade.charge(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1, CARD_NUMBER_1, 0, CHARGE_DESCRIPTION), VALUE_MUST_BE_POSITIVE);
-        assertThrowsLike(() -> facade.charge(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1, CARD_NUMBER_1, -1, CHARGE_DESCRIPTION), VALUE_MUST_BE_POSITIVE);
+        assertThrowsLike(() -> facade.charge(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1, CARD_NUMBER_1, 0, CHARGE_DESCRIPTION), INVALID_AMOUNT);
+        assertThrowsLike(() -> facade.charge(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1, CARD_NUMBER_1, -1, CHARGE_DESCRIPTION), INVALID_AMOUNT);
     }
 
     @Test

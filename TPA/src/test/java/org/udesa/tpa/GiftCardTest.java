@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.udesa.tpa.FacadeTest.*;
 import static org.udesa.tpa.Facade.*;
 import static org.udesa.tpa.GiftCard.*;
+import static org.udesa.tpa.Charge.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GiftCardTest {
@@ -43,10 +44,10 @@ public class GiftCardTest {
 
     @Test
     void test05cannotChargeOrAddZeroOrNegative() {
-        assertThrowsLike(() -> card.addBalance(0), VALUE_MUST_BE_POSITIVE);
-        assertThrowsLike(() -> card.addBalance(-500), VALUE_MUST_BE_POSITIVE);
-        assertThrowsLike(() -> card.charge(0, CHARGE_DESCRIPTION), VALUE_MUST_BE_POSITIVE);
-        assertThrowsLike(() -> card.charge(-500, CHARGE_DESCRIPTION), VALUE_MUST_BE_POSITIVE);
+        assertThrowsLike(() -> card.addBalance(0), INVALID_AMOUNT);
+        assertThrowsLike(() -> card.addBalance(-500), INVALID_AMOUNT);
+        assertThrowsLike(() -> card.charge(0, CHARGE_DESCRIPTION), INVALID_AMOUNT);
+        assertThrowsLike(() -> card.charge(-500, CHARGE_DESCRIPTION), INVALID_AMOUNT);
     }
 
     @Test

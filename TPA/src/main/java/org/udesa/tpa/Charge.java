@@ -1,7 +1,6 @@
 package org.udesa.tpa;
 
 import java.time.Instant;
-import java.util.Optional;
 import java.util.regex.Pattern;
 import static org.udesa.tpa.Utils.*;
 import static org.udesa.tpa.Facade.*;
@@ -15,17 +14,16 @@ public record Charge(
 ) {
     private static final Pattern DIGITS = Pattern.compile("\\d+");
 
-    public static String VALUE_GREATER_THAN_ZERO = "Value must be grater than 0";
-    public static String VALUE_MUST_BE_NUMERIC = "Value must have only numeric character, minus symbol is also excluded";
+    public static String INVALID_AMOUNT = "The charging amount must be grater than 0";
+    public static String CARD_NUMBER_MUST_BE_A_NUMERIC_STRING = "Value must have only numeric character, minus symbol is also excluded";
 
     public Charge {
         cardNumber = nonBlank(cardNumber, NULL_OR_EMPTY_VALUE);
         merchantId = nonBlank(merchantId, NULL_OR_EMPTY_VALUE);
         description = nonBlank(description, NULL_OR_EMPTY_VALUE);
 
-        ensure(DIGITS.matcher(cardNumber).matches(), VALUE_MUST_BE_NUMERIC);
-        ensure(amount > 0, VALUE_GREATER_THAN_ZERO);
-        timestamp = Optional.ofNullable(timestamp)
-                .orElseThrow(() -> new IllegalArgumentException(NULL_OBJECT));
+        ensure(DIGITS.matcher(cardNumber).matches(), CARD_NUMBER_MUST_BE_A_NUMERIC_STRING);
+        ensure(amount > 0, INVALID_AMOUNT);
+        ensure(timestamp != null, NULL_OBJECT);
     }
 }
