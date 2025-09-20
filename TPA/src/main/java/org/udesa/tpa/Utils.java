@@ -1,22 +1,18 @@
 package org.udesa.tpa;
 
-import java.util.Optional;
-
 public final class Utils {
 
     private Utils() {
     }
 
     public static String nonBlank(String value, String message) {
-        return Optional.ofNullable(value)
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .orElseThrow(() -> new IllegalArgumentException(message));
+        if (value == null) { throw new IllegalArgumentException(message); }
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) { throw new IllegalArgumentException(message); }
+        return trimmed;
     }
 
     public static void ensure(boolean condition, String message) {
-        Optional.of(condition)
-                .filter(Boolean::booleanValue)
-                .orElseThrow(() -> new IllegalArgumentException(message));
+        if (!condition) { throw new IllegalArgumentException(message); }
     }
 }

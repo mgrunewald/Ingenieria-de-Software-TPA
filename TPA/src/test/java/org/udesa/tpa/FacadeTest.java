@@ -93,7 +93,7 @@ public class FacadeTest {
 
     @Test
     void test07doesNotOperateWithExpiredToken() {
-        MyClock clock = new MyClock(Instant.parse("2025-09-15T20:00:00Z"), ZoneId.of("UTC"));
+        MyClock clock = new MyClock(Instant.parse("2025-09-15T20:00:00Z"));
         Facade facade = new Facade(
                 clock, Duration.ofMinutes(5),
                 Map.of(USER_1, PASSWORD_1),
@@ -152,7 +152,7 @@ public class FacadeTest {
 
     @Test
     void test12merchantWithValidKeyCanChargeClaimedCardAndUpdatesBalanceAndStatement_noToken() {
-        MyClock clock = new MyClock(Instant.parse("2025-09-18T12:00:00Z"), ZoneId.of("UTC"));
+        MyClock clock = new MyClock(Instant.parse("2025-09-18T12:00:00Z"));
         Facade facade = new Facade(
                 clock, Duration.ofMinutes(5),
                 Map.of(USER_1, PASSWORD_1),
@@ -215,7 +215,7 @@ public class FacadeTest {
 
     @Test
     void test17merchantChargeWithTokenVariantAlsoWorks() {
-        MyClock clock = new MyClock(Instant.parse("2025-09-18T12:34:56Z"), ZoneId.of("UTC"));
+        MyClock clock = new MyClock(Instant.parse("2025-09-18T12:34:56Z"));
         Facade facade = new Facade(
                 clock, Duration.ofMinutes(5),
                 Map.of(USER_1, PASSWORD_1),

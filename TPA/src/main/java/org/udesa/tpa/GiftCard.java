@@ -17,9 +17,8 @@ public class GiftCard {
     public GiftCard(String owner, String cardNumber, int initialBalance) {
         this.owner = nonBlank(owner, NULL_OR_EMPTY_VALUE);
         this.cardNumber = nonBlank(cardNumber, NULL_OR_EMPTY_VALUE);
-        this.balance = Optional.of(initialBalance)
-                .filter(v -> v >= 0)
-                .orElseThrow(() -> new IllegalArgumentException(NEGATIVE_INITIAL_BALANCE));
+        if (initialBalance < 0) { throw new IllegalArgumentException(NEGATIVE_INITIAL_BALANCE); }
+        this.balance = initialBalance;
     }
 
     public void addBalance(int amount) {
@@ -30,10 +29,9 @@ public class GiftCard {
     public void charge(int amount, String description) {
         ensure(amount > 0, INVALID_AMOUNT);
         nonBlank(description, NULL_OR_EMPTY_VALUE);
-
-        balance = Optional.of(balance - amount)
-                .filter(v -> v >= 0)
-                .orElseThrow(() -> new IllegalArgumentException(INSUFFICIENT_FUNDS));
+        int newBalance = balance - amount;
+        if (newBalance < 0) {throw new IllegalArgumentException(INSUFFICIENT_FUNDS);}
+        balance = newBalance;
     }
 
     public String owner() { return owner; }
