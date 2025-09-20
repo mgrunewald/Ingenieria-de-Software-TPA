@@ -21,7 +21,7 @@ public final class Facade {
 
     public static String WRONG_PASSWORD = "Password is incorrect";
     public static String NULL_OBJECT = "Object can not be null";
-    public static String NULL_OR_EMPTY_VALUE = "The valu of the field can not be null or empty";
+    public static String NULL_OR_EMPTY_VALUE = "The value of the field can not be null or empty";
     public static String GIFT_CARD_DOES_NOT_BELONG_TO_USER = "The gift card does not belong to the user";
     public static String UNCLAIMED_CARD = "This gift card has not been claimed in this session";
     public static String CLAIMED_CARD = "This gift card has been claimed in this session";

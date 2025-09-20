@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import static org.udesa.tpa.FacadeTest.*;
+import static org.udesa.tpa.Facade.*;
+import static org.udesa.tpa.Charge.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ChargeTest {
@@ -13,44 +15,39 @@ public class ChargeTest {
     @Test
     void test01createsValidCharge() {
         Charge charge = new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, CHARGE_DESCRIPTION, now());
-        assertAll(
-                () -> assertEquals(CARD_NUMBER_1, charge.cardNumber()),
-                () -> assertEquals(MERCHANT_ID_1, charge.merchantId()),
-                () -> assertEquals(300, charge.amount()),
-                () -> assertEquals(CHARGE_DESCRIPTION, charge.description()),
-                () -> assertEquals(now(), charge.timestamp())
-        );
+        assertEquals(CARD_NUMBER_1, charge.cardNumber());
+        assertEquals(MERCHANT_ID_1, charge.merchantId());
+        assertEquals(300, charge.amount());
+        assertEquals(CHARGE_DESCRIPTION, charge.description());
+        assertEquals(now(), charge.timestamp());
     }
 
     @Test
     void test02canNotChargeAmountZeroOrNegative() {
-        assertAll(
-                () -> assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 0,   CHARGE_DESCRIPTION, now())),
-                () -> assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, -3,  CHARGE_DESCRIPTION, now()))
-        );
+        assertThrowsLike( () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 0, CHARGE_DESCRIPTION, now()), VALUE_GREATER_THAN_ZERO);
+        assertThrowsLike(() -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, -3,  CHARGE_DESCRIPTION, now()), VALUE_GREATER_THAN_ZERO);
     }
 
     @Test
     void test03failsOnInvalidMerchantId(){
-        assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, "", 300, CHARGE_DESCRIPTION, now()));
-        assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, " ", 300, CHARGE_DESCRIPTION, now()));
-        assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, null, 300, CHARGE_DESCRIPTION, now()));
+        assertThrowsLike( () -> new Charge(CARD_NUMBER_1, "", 300, CHARGE_DESCRIPTION, now()), NULL_OR_EMPTY_VALUE);
+        assertThrowsLike( () -> new Charge(CARD_NUMBER_1, " ", 300, CHARGE_DESCRIPTION, now()), NULL_OR_EMPTY_VALUE);
+        assertThrowsLike(() -> new Charge(CARD_NUMBER_1, null, 300, CHARGE_DESCRIPTION, now()), NULL_OR_EMPTY_VALUE);
     }
 
     @Test
     void test04failsOnInvalidDescription(){
-        assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, "", now()));
-        assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, " ", now()));
-        assertThrows(IllegalArgumentException.class, () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, null, now()));
+        assertThrowsLike( () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, "", now()), NULL_OR_EMPTY_VALUE);
+        assertThrowsLike( () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, " ", now()), NULL_OR_EMPTY_VALUE);
+        assertThrowsLike( () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, null, now()), NULL_OR_EMPTY_VALUE);
     }
 
     @Test
     void test05cardNumberMustBeOnlyDigits() {
-        assertAll(
-                () -> assertThrows(IllegalArgumentException.class, () -> new Charge("a",  MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now())),
-                () -> assertThrows(IllegalArgumentException.class, () -> new Charge("a1", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now())),
-                () -> assertThrows(IllegalArgumentException.class, () -> new Charge("-1", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()))
-        );
+     assertThrows(IllegalArgumentException.class, () -> new Charge("a",  MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), VALUE_MUST_BE_NUMERIC);
+     assertThrowsLike(  () -> new Charge("a1", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), VALUE_MUST_BE_NUMERIC);
+     assertThrowsLike( () -> new Charge("-1", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), VALUE_MUST_BE_NUMERIC);
+     assertThrowsLike( () -> new Charge("#$%7", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), VALUE_MUST_BE_NUMERIC);
     }
 
     @Test
@@ -59,7 +56,5 @@ public class ChargeTest {
         Charge charge2 = new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, CHARGE_DESCRIPTION, now().plusSeconds(1));
         assertNotEquals(charge1, charge2);
     }
+
 }
-
-
-//agregar para hacer charges diferentes que pasa

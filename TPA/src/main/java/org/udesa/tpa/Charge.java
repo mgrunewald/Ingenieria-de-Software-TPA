@@ -16,14 +16,14 @@ public record Charge(
     private static final Pattern DIGITS = Pattern.compile("\\d+");
 
     public static String VALUE_GREATER_THAN_ZERO = "Value must be grater than 0";
-    public static String VALUE_MUST_BE_NUMERIC = "Value must be numeric";
+    public static String VALUE_MUST_BE_NUMERIC = "Value must have only numeric character, minus symbol is also excluded";
 
     public Charge {
         cardNumber = nonBlank(cardNumber, NULL_OR_EMPTY_VALUE);
         merchantId = nonBlank(merchantId, NULL_OR_EMPTY_VALUE);
         description = nonBlank(description, NULL_OR_EMPTY_VALUE);
 
-        ensure(DIGITS.matcher(cardNumber).matches(), VALUE_MUST_BE_NUMERIC + VALUE_GREATER_THAN_ZERO);
+        ensure(DIGITS.matcher(cardNumber).matches(), VALUE_MUST_BE_NUMERIC);
         ensure(amount > 0, VALUE_GREATER_THAN_ZERO);
         timestamp = Optional.ofNullable(timestamp)
                 .orElseThrow(() -> new IllegalArgumentException(NULL_OBJECT));
