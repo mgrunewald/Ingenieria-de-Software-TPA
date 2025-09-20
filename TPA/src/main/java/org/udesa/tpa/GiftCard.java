@@ -2,6 +2,7 @@ package org.udesa.tpa;
 
 import java.util.Optional;
 import static org.udesa.tpa.Utils.*;
+import static org.udesa.tpa.Facade.*;
 
 public class GiftCard {
     private final String owner;
@@ -14,8 +15,8 @@ public class GiftCard {
 
 
     public GiftCard(String owner, String cardNumber, int initialBalance) {
-        this.owner = nonBlank(owner, "owner");
-        this.cardNumber = nonBlank(cardNumber, "cardNumber");
+        this.owner = nonBlank(owner, NULL_OR_EMPTY_VALUE);
+        this.cardNumber = nonBlank(cardNumber, NULL_OR_EMPTY_VALUE);
         this.balance = Optional.of(initialBalance)
                 .filter(v -> v >= 0)
                 .orElseThrow(() -> new IllegalArgumentException(NEGATIVE_INITIAL_BALANCE));
@@ -28,7 +29,7 @@ public class GiftCard {
 
     public void charge(int amount, String description) {
         ensure(amount > 0, VALUE_MUST_BE_POSITIVE);
-        nonBlank(description, "description");
+        nonBlank(description, NULL_OR_EMPTY_VALUE);
 
         balance = Optional.of(balance - amount)
                 .filter(v -> v >= 0)

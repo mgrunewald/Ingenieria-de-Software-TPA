@@ -60,3 +60,6 @@ public class ChargeTest {
         assertNotEquals(charge1, charge2);
     }
 }
+
+
+//agregar para hacer charges diferentes que pasa

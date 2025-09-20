@@ -103,3 +103,5 @@ public class GiftCardTest {
     }
 }
 
+// mismo usuareio hace charges de 2 giftcards y 2 usuariosb charge sis gc a l mismo tiempo
+// fallar al hacer el charge de un usuario que no es el sduyo

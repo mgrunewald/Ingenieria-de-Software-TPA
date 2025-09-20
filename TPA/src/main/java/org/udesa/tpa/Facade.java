@@ -21,6 +21,7 @@ public final class Facade {
 
     public static String WRONG_PASSWORD = "Password is incorrect";
     public static String NULL_OBJECT = "Object can not be null";
+    public static String NULL_OR_EMPTY_VALUE = "The valu of the field can not be null or empty";
     public static String GIFT_CARD_DOES_NOT_BELONG_TO_USER = "The gift card does not belong to the user";
     public static String UNCLAIMED_CARD = "This gift card has not been claimed in this session";
     public static String CLAIMED_CARD = "This gift card has been claimed in this session";
@@ -45,7 +46,7 @@ public final class Facade {
 
     private String requirePassword(String username) {
         String pass = users.get(username);
-        nonBlank(pass, "username key in map");
+        nonBlank(pass, NULL_OR_EMPTY_VALUE);
         return pass;
     }
 
@@ -68,7 +69,7 @@ public final class Facade {
     }
 
     private UserSession requireActiveSession(String token) {
-        UserSession session = Optional.ofNullable(sessionsByToken.get(nonBlank(token, "token"))) // BORRAR OFNULLABLE Y AGREGAR IFS
+        UserSession session = Optional.ofNullable(sessionsByToken.get(nonBlank(token, NULL_OR_EMPTY_VALUE)))
                 .orElseThrow(() -> new IllegalArgumentException(NULL_OBJECT));
         session.ensureActive(clock);
         return session;
@@ -122,7 +123,7 @@ public final class Facade {
     private Merchant requireMerchant(String merchantId, String privateCredential) {
         Merchant merchant = Optional.ofNullable(merchantsById.get(merchantId))
                 .orElseThrow(() -> new IllegalArgumentException(UNKNOWN_MERCHANT));
-        ensure(merchant.privateCredential().equals(privateCredential), "privateCredential");
+        ensure(merchant.privateCredential().equals(privateCredential), NULL_OR_EMPTY_VALUE);
         return merchant;
     }
 
@@ -134,4 +135,4 @@ public final class Facade {
         chargesByCard.computeIfAbsent(cardNumber, k -> new ArrayList<>()).add(charge);
     }
 }
-
+// BORRAR OFNULLABLE Y AGREGAR IFS

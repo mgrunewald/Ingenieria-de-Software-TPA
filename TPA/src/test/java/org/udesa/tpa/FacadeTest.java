@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import static org.udesa.tpa.Facade.*;
 import static org.udesa.tpa.UserSession.*;
+import static org.udesa.tpa.GiftCard.*;
 
 import java.time.*;
 import java.util.List;
@@ -47,7 +48,7 @@ public class FacadeTest {
     }
 
     @Test
-    void test02usersArePreloadedViaConstructorCorreclty() {
+    void test01usersArePreloadedViaConstructorCorreclty() {
         assertTrue(facade.exists(USER_1));
         assertTrue(facade.exists(USER_2));
         assertThrowsLike(() ->  facade.exists("unregistered"), UNKNOWN_USER) ;
@@ -55,24 +56,24 @@ public class FacadeTest {
     }
 
     @Test
-    void test03startsSessionCorrectly() {
+    void test02startsSessionCorrectly() {
         String token = facade.login(USER_1, PASSWORD_1);
         assertTrue(facade.isSessionActive(token));
         assertNotNull(token);
     }
 
     @Test
-    void test04failsToLoginWithIncorrectPassword() {
+    void test03failsToLoginWithIncorrectPassword() {
         assertThrowsLike(() -> facade.login(USER_1, "otra"), WRONG_PASSWORD);
     }
 
     @Test
-    void test05unregisteredUserFailsToLogin() {
+    void test04unregisteredUserFailsToLogin() {
         assertThrowsLike( () -> facade.login("unregistered", "password"), UNKNOWN_USER);
     }
 
     @Test
-    void test00UnableToClaimGiftCardsThatAreNotOwnedByTheUser() {
+    void test05UnableToClaimGiftCardsThatAreNotOwnedByTheUser() {
         String token1 = facade.login(USER_1, PASSWORD_1);
         assertThrowsLike( () -> facade.claim(token1, CARD_NUMBER_3), GIFT_CARD_DOES_NOT_BELONG_TO_USER );
     }
@@ -122,32 +123,35 @@ public class FacadeTest {
         );
         String tMartina = facade.login(USER_1, PASSWORD_1);
         facade.claim(tMartina, CARD_NUMBER_1);
-        assertAll(
-                () -> assertEquals(1000, facade.balance(tMartina, CARD_NUMBER_1)),
-                () -> assertEquals(0,    facade.statement(tMartina, CARD_NUMBER_1).size()),
-                () -> assertThrows(IllegalArgumentException.class, () -> facade.balance(tMartina, CARD_NUMBER_2)),
-                () -> assertThrows(IllegalArgumentException.class, () -> facade.statement(tMartina, CARD_NUMBER_2))
-        );
+        assertEquals(1000, facade.balance(tMartina, CARD_NUMBER_1));
+        assertEquals(0, facade.statement(tMartina, CARD_NUMBER_1).size());
+        assertThrowsLike( () -> facade.balance(tMartina, CARD_NUMBER_2), UNCLAIMED_CARD);
+        assertThrowsLike(() -> facade.statement(tMartina, CARD_NUMBER_2), UNCLAIMED_CARD);
     }
 
     @Test
-    void test9canNotClaimACardMoreThanOnceOnTheSameSession() {
+    void test09canNotClaimACardMoreThanOnceOnTheSameSession() {
         String token = facade.login(USER_1, PASSWORD_1);
         facade.claim(token, CARD_NUMBER_1);
-        assertThrows(IllegalArgumentException.class, () -> facade.claim(token, CARD_NUMBER_1));
+        assertThrowsLike(() -> facade.claim(token, CARD_NUMBER_1), CLAIMED_CARD);
     }
 
     @Test
     void test10failsToReadBalanceOfAnUnclaimedCard() {
         String token = facade.login(USER_1, PASSWORD_1);
-        assertAll(
-                () -> assertThrows(IllegalArgumentException.class, () -> facade.balance(token, CARD_NUMBER_1)),
-                () -> assertThrows(IllegalArgumentException.class, () -> facade.statement(token, CARD_NUMBER_1))
-        );
+        assertThrowsLike(() -> facade.balance(token, CARD_NUMBER_1), UNCLAIMED_CARD);
+        assertThrowsLike(() -> facade.statement(token, CARD_NUMBER_1), UNCLAIMED_CARD);
     }
 
     @Test
-    void test11merchantWithValidKeyCanChargeClaimedCardAndUpdatesBalanceAndStatement_noToken() {
+    void test11failsToClaimGiftCardWithInvalidNumber() {
+        String token = facade.login(USER_1, PASSWORD_1);
+        assertThrowsLike(() -> facade.claim(token, "otro"), UNKNOWN_CARD);
+
+    }
+
+    @Test
+    void test12merchantWithValidKeyCanChargeClaimedCardAndUpdatesBalanceAndStatement_noToken() {
         MyClock clock = new MyClock(Instant.parse("2025-09-18T12:00:00Z"), ZoneId.of("UTC"));
         Facade facade = new Facade(
                 clock, Duration.ofMinutes(5),
@@ -169,19 +173,18 @@ public class FacadeTest {
     }
 
     @Test
-    void test12rejectChargeOnUnclaimedCard_noToken() {
+    void test13rejectChargeOnUnclaimedCard_noToken() {
         Facade facade = new Facade(
                 Clock.systemUTC(), Duration.ofMinutes(5),
                 Map.of(USER_1, PASSWORD_1),
                 Map.of(CARD_NUMBER_1, new GiftCard(USER_1, CARD_NUMBER_1, 1000)),
                 Map.of(MERCHANT_ID_1, new Merchant(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1))
         );
-        assertThrows(IllegalArgumentException.class,
-                () -> facade.charge(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1, CARD_NUMBER_1, 100, CHARGE_DESCRIPTION));
+        assertThrowsLike(()-> facade.charge(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1, CARD_NUMBER_1, 100, CHARGE_DESCRIPTION), UNCLAIMED_CARD);
     }
 
     @Test
-    void test13rejectChargeFromUnknownMerchantKey_noToken() {
+    void test14rejectChargeFromUnknownMerchantKey_noToken() {
         Facade facade = new Facade(
                 Clock.systemUTC(), Duration.ofMinutes(5),
                 Map.of(USER_1, PASSWORD_1),
@@ -190,44 +193,28 @@ public class FacadeTest {
         );
         String token = facade.login(USER_1, PASSWORD_1);
         facade.claim(token, CARD_NUMBER_1);
-        assertThrows(IllegalArgumentException.class,
-                () -> facade.charge("unknown", MERCHANT_CREDENTIAL_1, CARD_NUMBER_1, 100, CHARGE_DESCRIPTION));
+        assertThrowsLike(() -> facade.charge("unknown", MERCHANT_CREDENTIAL_1, CARD_NUMBER_1, 100, CHARGE_DESCRIPTION), UNKNOWN_MERCHANT);
     }
 
     @Test
-    void test14rejectNonPositiveChargeAmount_noToken() {
-        Facade facade = new Facade(
-                Clock.systemUTC(), Duration.ofMinutes(5),
-                Map.of(USER_1, PASSWORD_1),
-                Map.of(CARD_NUMBER_1, new GiftCard(USER_1, CARD_NUMBER_1, 1000)),
-                Map.of(MERCHANT_ID_1, new Merchant(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1))
-        );
+    void test15rejectNonPositiveChargeAmount_noToken() {
+        createFacadeForDatabaseWithOnlyOneUserCardAndMerchant(Clock.systemUTC());
         String token = facade.login(USER_1, PASSWORD_1);
         facade.claim(token, CARD_NUMBER_1);
-        assertAll(
-                () -> assertThrows(IllegalArgumentException.class,
-                        () -> facade.charge(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1, CARD_NUMBER_1, 0, CHARGE_DESCRIPTION)),
-                () -> assertThrows(IllegalArgumentException.class,
-                        () -> facade.charge(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1, CARD_NUMBER_1, -1, CHARGE_DESCRIPTION))
-        );
+        assertThrowsLike(() -> facade.charge(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1, CARD_NUMBER_1, 0, CHARGE_DESCRIPTION), VALUE_MUST_BE_POSITIVE);
+        assertThrowsLike(() -> facade.charge(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1, CARD_NUMBER_1, -1, CHARGE_DESCRIPTION), VALUE_MUST_BE_POSITIVE);
     }
 
     @Test
-    void test15rejectChargeWithWrongMerchantCredential_noToken() {
-        Facade facade = new Facade(
-                Clock.systemUTC(), Duration.ofMinutes(5),
-                Map.of(USER_1, PASSWORD_1),
-                Map.of(CARD_NUMBER_1, new GiftCard(USER_1, CARD_NUMBER_1, 1000)),
-                Map.of(MERCHANT_ID_1, new Merchant(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1))
-        );
+    void test16rejectChargeWithWrongMerchantCredential_noToken() {
+        createFacadeForDatabaseWithOnlyOneUserCardAndMerchant(Clock.systemUTC());
         String token = facade.login(USER_1, PASSWORD_1);
         facade.claim(token, CARD_NUMBER_1);
-        assertThrows(IllegalArgumentException.class,
-                () -> facade.charge(MERCHANT_ID_1, "otra", CARD_NUMBER_1, 100, CHARGE_DESCRIPTION));
+        assertThrowsLike(() -> facade.charge(MERCHANT_ID_1, "otra", CARD_NUMBER_1, 100, CHARGE_DESCRIPTION), NULL_OR_EMPTY_VALUE);
     }
 
     @Test
-    void test16merchantChargeWithTokenVariantAlsoWorks() {
+    void test17merchantChargeWithTokenVariantAlsoWorks() {
         MyClock clock = new MyClock(Instant.parse("2025-09-18T12:34:56Z"), ZoneId.of("UTC"));
         Facade facade = new Facade(
                 clock, Duration.ofMinutes(5),
@@ -261,9 +248,13 @@ public class FacadeTest {
                 assertThrows( Exception.class, executable )
                         .getMessage() );
     }
-}
 
-// no se pued claimear invalids giftcard r
-// ver de hacer mas de un charge
-// mismo ususario 2 transactions a diferetes transacciones
-// cambiar numero de tests
+    private static void createFacadeForDatabaseWithOnlyOneUserCardAndMerchant(Clock clock){
+        Facade facade = new Facade(
+                clock, Duration.ofMinutes(5),
+                Map.of(USER_1, PASSWORD_1),
+                Map.of(CARD_NUMBER_1, new GiftCard(USER_1, CARD_NUMBER_1, 1000)),
+                Map.of(MERCHANT_ID_1, new Merchant(MERCHANT_ID_1, MERCHANT_CREDENTIAL_1))
+        );
+    }
+}

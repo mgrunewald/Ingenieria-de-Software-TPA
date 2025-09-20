@@ -20,15 +20,15 @@ public final class UserSession {
     private UserSession(String token, String username, Instant issuedAt, Instant expiresAt) {
         notNull(issuedAt, NULL_OBJECT);
         notNull(expiresAt, NULL_OBJECT);
-        this.token = nonBlank(token, "token");
-        this.username = nonBlank(username, "username");
+        this.token = nonBlank(token, NULL_OR_EMPTY_VALUE);
+        this.username = nonBlank(username, NULL_OR_EMPTY_VALUE);
         this.issuedAt = issuedAt;
         this.expiresAt = expiresAt;
         this.ttl = Duration.between(issuedAt, expiresAt);
     }
 
     public static UserSession issue(String username, Duration ttl, Clock clock) {
-        nonBlank(username, "username");
+        nonBlank(username, NULL_OR_EMPTY_VALUE);
         notNull(ttl, NULL_OBJECT);
         notNull(clock, NULL_OBJECT);
         ensure(!ttl.isNegative() && !ttl.isZero(), INVALID_TTL);

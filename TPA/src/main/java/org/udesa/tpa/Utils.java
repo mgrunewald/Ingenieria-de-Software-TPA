@@ -7,11 +7,11 @@ public final class Utils {
     private Utils() {
     }
 
-    public static String nonBlank(String value, String field) {
+    public static String nonBlank(String value, String message) {
         return Optional.ofNullable(value)
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
-                .orElseThrow(() -> new IllegalArgumentException(field + " is null or empty"));
+                .orElseThrow(() -> new IllegalArgumentException(message));
     }
 
     public static void ensure(boolean condition, String message) {

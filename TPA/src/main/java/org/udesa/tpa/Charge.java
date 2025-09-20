@@ -19,9 +19,9 @@ public record Charge(
     public static String VALUE_MUST_BE_NUMERIC = "Value must be numeric";
 
     public Charge {
-        cardNumber = nonBlank(cardNumber, "cardNumber");
-        merchantId = nonBlank(merchantId, "merchantId");
-        description = nonBlank(description, "description");
+        cardNumber = nonBlank(cardNumber, NULL_OR_EMPTY_VALUE);
+        merchantId = nonBlank(merchantId, NULL_OR_EMPTY_VALUE);
+        description = nonBlank(description, NULL_OR_EMPTY_VALUE);
 
         ensure(DIGITS.matcher(cardNumber).matches(), VALUE_MUST_BE_NUMERIC + VALUE_GREATER_THAN_ZERO);
         ensure(amount > 0, VALUE_GREATER_THAN_ZERO);
