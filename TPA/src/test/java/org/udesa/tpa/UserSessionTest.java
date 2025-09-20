@@ -7,7 +7,7 @@ import java.time.*;
 import static org.udesa.tpa.FacadeTest.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-class UserSessionTest {
+class  UserSessionTest {
     private MyClock clock;
 
     @BeforeEach

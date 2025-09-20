@@ -18,7 +18,6 @@ public final class Facade {
     private final Map<String, Merchant> merchantsById = new HashMap<>();
     private final Map<String, List<Charge>> chargesByCard = new HashMap<>();
 
-
     public static String NULL_CLOCK = "Clock can not be null";
     public static String NULL_TTL = "TTL can not be null";
     public static String REGISTERED = "Already registered";

@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import static org.springframework.util.Assert.*;
 import static org.udesa.tpa.Utils.*;
+import static org.udesa.tpa.Facade.*;
 
 public final class UserSession {
     private final String token;
@@ -13,15 +14,12 @@ public final class UserSession {
     private final Instant expiresAt;
     private final Duration ttl;
 
-    public static String NULL_INSTANT = "Instant can not be null";
-    public static String NULL_DURATION = "TTL can not be null";
-    public static String NULL_CLOCK = "Clock can not be null";
     public static String INVALID_TTL = "TTL can not be negative nor zero";
     public static String EXPIRED_TOKEN = "Token has expired";
 
     private UserSession(String token, String username, Instant issuedAt, Instant expiresAt) {
-        notNull(issuedAt, NULL_INSTANT);
-        notNull(expiresAt, NULL_INSTANT);
+        notNull(issuedAt, NULL_OBJECT);
+        notNull(expiresAt, NULL_OBJECT);
         this.token = nonBlank(token, "token");
         this.username = nonBlank(username, "username");
         this.issuedAt = issuedAt;
@@ -31,8 +29,8 @@ public final class UserSession {
 
     public static UserSession issue(String username, Duration ttl, Clock clock) {
         nonBlank(username, "username");
-        notNull(ttl, NULL_DURATION);
-        notNull(clock, NULL_CLOCK);
+        notNull(ttl, NULL_OBJECT);
+        notNull(clock, NULL_OBJECT);
         ensure(!ttl.isNegative() && !ttl.isZero(), INVALID_TTL);
 
         Instant now = Instant.now(clock);
@@ -41,18 +39,16 @@ public final class UserSession {
     }
 
     public boolean isActive(Clock clock) {
-        notNull(clock, NULL_CLOCK);
+        notNull(clock, NULL_OBJECT);
         return !Instant.now(clock).isAfter(expiresAt);
     }
 
     public void ensureActive(Clock clock) {
-        notNull(clock, NULL_CLOCK);
+        notNull(clock, NULL_OBJECT);
         ensure(!Instant.now(clock).isAfter(expiresAt), EXPIRED_TOKEN);
     }
 
     public String token()     { return token; }
     public String username()  { return username; }
     public Instant issuedAt() { return issuedAt; }
-    public Instant expiresAt(){ return expiresAt; }
-    public Duration ttl()     { return ttl; }
 }
