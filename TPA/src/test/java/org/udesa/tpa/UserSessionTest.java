@@ -54,4 +54,14 @@ class  UserSessionTest {
         assertThrowsLike(() -> UserSession.issue(USER_1, Duration.ofMinutes(-1), clock), INVALID_TTL);
         assertThrowsLike(() -> UserSession.issue(USER_1, Duration.ofMinutes(5), null), NULL_OBJECT);
     }
+
+    @Test
+    void test05tokensAreNonBlankAndUnique() {
+        UserSession session1 = UserSession.issue(USER_1, Duration.ofMinutes(5), clock);
+        UserSession session2 = UserSession.issue(USER_1, Duration.ofMinutes(5), clock);
+        assertFalse(session1.token().isBlank());
+        assertFalse(session2.token().isBlank());
+        assertNotEquals(session1.token(), session2.token());
+    }
+
 }
