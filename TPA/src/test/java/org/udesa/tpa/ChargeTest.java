@@ -23,27 +23,27 @@ public class ChargeTest {
     }
 
     @Test
-    void test02canNotChargeAmountZeroOrNegative() {
+    void test02failsToChargeAmountZeroOrNegative() {
         assertThrowsLike( () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 0, CHARGE_DESCRIPTION, now()), INVALID_AMOUNT);
         assertThrowsLike(() -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, -3,  CHARGE_DESCRIPTION, now()), INVALID_AMOUNT);
     }
 
     @Test
-    void test03failsOnInvalidMerchantId(){
+    void test03failsToChargeWithInvalidMerchantId(){
         assertThrowsLike( () -> new Charge(CARD_NUMBER_1, "", 300, CHARGE_DESCRIPTION, now()), NULL_OR_EMPTY_VALUE);
         assertThrowsLike( () -> new Charge(CARD_NUMBER_1, " ", 300, CHARGE_DESCRIPTION, now()), NULL_OR_EMPTY_VALUE);
         assertThrowsLike(() -> new Charge(CARD_NUMBER_1, null, 300, CHARGE_DESCRIPTION, now()), NULL_OR_EMPTY_VALUE);
     }
 
     @Test
-    void test04failsOnInvalidDescription(){
+    void test04failsToChargeWithInvalidDescription(){
         assertThrowsLike( () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, "", now()), NULL_OR_EMPTY_VALUE);
         assertThrowsLike( () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, " ", now()), NULL_OR_EMPTY_VALUE);
         assertThrowsLike( () -> new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, null, now()), NULL_OR_EMPTY_VALUE);
     }
 
     @Test
-    void test05cardNumberMustBeOnlyDigits() {
+    void test05failsWhenTheCardNumberCharactersAreNotNumericDigits() {
      assertThrows(IllegalArgumentException.class, () -> new Charge("a",  MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), CARD_NUMBER_MUST_BE_A_NUMERIC_STRING);
      assertThrowsLike(  () -> new Charge("a1", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), CARD_NUMBER_MUST_BE_A_NUMERIC_STRING);
      assertThrowsLike( () -> new Charge("-1", MERCHANT_ID_1, 1000, CHARGE_DESCRIPTION, now()), CARD_NUMBER_MUST_BE_A_NUMERIC_STRING);
@@ -51,7 +51,7 @@ public class ChargeTest {
     }
 
     @Test
-    void test06differentTimestampsMeanDifferentCharges() {
+    void test06ChecksThatChargesWithTheSameValuesButOneSecondApartAreDifferentCharges() {
         Charge charge1 = new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, CHARGE_DESCRIPTION, now());
         Charge charge2 = new Charge(CARD_NUMBER_1, MERCHANT_ID_1, 300, CHARGE_DESCRIPTION, now().plusSeconds(1));
         assertNotEquals(charge1, charge2);

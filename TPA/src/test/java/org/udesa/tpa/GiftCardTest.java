@@ -38,12 +38,12 @@ public class GiftCardTest {
     }
 
     @Test
-    void test04cantChargeMoreThanBalance() {
+    void test04failsToChargeMoreThanCardsBalance() {
         assertThrowsLike(() -> card.charge(2000, CHARGE_DESCRIPTION), INSUFFICIENT_FUNDS);
     }
 
     @Test
-    void test05cannotChargeOrAddZeroOrNegative() {
+    void test05failsToChargeOrAddZeroOrNegativeAmount() {
         assertThrowsLike(() -> card.addBalance(0), INVALID_AMOUNT);
         assertThrowsLike(() -> card.addBalance(-500), INVALID_AMOUNT);
         assertThrowsLike(() -> card.charge(0, CHARGE_DESCRIPTION), INVALID_AMOUNT);
@@ -100,12 +100,16 @@ public class GiftCardTest {
     }
 
     @Test
-    void test13SameUserAddsBalanceOnDifferentGiftCardsCorrectly() {
+    void test13SameUserAddsBalanceAndChargesDifferentGiftCardsCorrectly() {
         GiftCard card1 = gcMartina1000();
         GiftCard card2 = gcMartina100();
         card1.addBalance(500);
         card2.addBalance(50);
         assertEquals(1500, card1.balance());
         assertEquals(150, card2.balance());
+        card1.charge(100, CHARGE_DESCRIPTION);
+        card2.charge(10, CHARGE_DESCRIPTION);
+        assertEquals(1400, card1.balance());
+        assertEquals(140, card2.balance());
     }
 }

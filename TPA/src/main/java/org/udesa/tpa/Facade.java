@@ -104,7 +104,7 @@ public final class Facade {
 
     private GiftCard requireClaimedByAnyUser(String cardNumber) {
         GiftCard card = giftCardsByNumber.get(cardNumber);
-        if (card == null) { throw new IllegalArgumentException(NULL_OBJECT); }
+        if (card == null) { throw new IllegalArgumentException(UNKNOWN_CARD); }
         ensure(claimsByToken.values().stream().anyMatch(set -> set.contains(cardNumber)), UNCLAIMED_CARD);
         return card;
     }

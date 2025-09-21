@@ -1,6 +1,5 @@
 package org.udesa.tpa;
 
-import java.util.Optional;
 import static org.udesa.tpa.Utils.*;
 import static org.udesa.tpa.Facade.*;
 import static org.udesa.tpa.Charge.*;
@@ -10,7 +9,7 @@ public class GiftCard {
     private final String cardNumber;
     private int balance;
 
-    public static String NEGATIVE_INITIAL_BALANCE = "Initial Balance must be a positive number";
+    public static String NEGATIVE_INITIAL_BALANCE = "Initial Balance must be a non-negative number";
     public static String INSUFFICIENT_FUNDS = "Charging amount must be less than the card's balance";
 
 

@@ -14,7 +14,7 @@ public record Charge(
 ) {
     private static final Pattern DIGITS = Pattern.compile("\\d+");
 
-    public static String INVALID_AMOUNT = "The charging amount must be grater than 0";
+    public static String INVALID_AMOUNT = "The charging amount must be greater than 0";
     public static String CARD_NUMBER_MUST_BE_A_NUMERIC_STRING = "Value must have only numeric character, minus symbol is also excluded";
 
     public Charge {

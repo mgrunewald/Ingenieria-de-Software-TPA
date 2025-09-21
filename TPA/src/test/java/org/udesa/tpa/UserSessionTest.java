@@ -18,7 +18,7 @@ class  UserSessionTest {
     }
 
     @Test
-    void test01createsTokenAndSetsTTL() {
+    void test01createsTokenAndSetsTTLCorrectly() {
         Duration ttl = Duration.ofMinutes(5);
         UserSession session = UserSession.issue(USER_1, ttl, clock);
         assertNotNull(session.token());
@@ -28,7 +28,7 @@ class  UserSessionTest {
     }
 
     @Test
-    void test02sessionIsActiveAtFiveMinutesAndExpiresAfter() {
+    void test02sessionIsActiveForFiveMinutesAndExpiresAfter() {
         UserSession session = UserSession.issue(USER_1, Duration.ofMinutes(5), clock);
         clock.plus(Duration.ofMinutes(4).plusSeconds(59));
         assertTrue(session.isActive(clock));
@@ -47,7 +47,7 @@ class  UserSessionTest {
     }
 
     @Test
-    void test04failsWhenValuesAreInvalid() {
+    void test04failsToBuildTheSessionWhenValuesAreInvalid() {
         assertThrowsLike(() -> UserSession.issue(null, Duration.ofMinutes(5), clock), NULL_OR_EMPTY_VALUE);
         assertThrowsLike(() -> UserSession.issue("  ", Duration.ofMinutes(5), clock), NULL_OR_EMPTY_VALUE);
         assertThrowsLike(() -> UserSession.issue(USER_1, Duration.ZERO, clock), INVALID_TTL);

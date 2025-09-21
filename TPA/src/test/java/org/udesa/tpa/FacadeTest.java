@@ -48,7 +48,7 @@ public class FacadeTest {
     }
 
     @Test
-    void test01usersArePreloadedViaConstructorCorreclty() {
+    void test01usersArePreloadedViaConstructorCorrectly() {
         assertTrue(facade.exists(USER_1));
         assertTrue(facade.exists(USER_2));
         assertThrowsLike(() ->  facade.exists("unregistered"), UNKNOWN_USER) ;
@@ -92,7 +92,7 @@ public class FacadeTest {
     }
 
     @Test
-    void test07doesNotOperateWithExpiredToken() {
+    void test07failsToOperateWithExpiredToken() {
         MyClock clock = new MyClock(Instant.parse("2025-09-15T20:00:00Z"));
         Facade facade = new Facade(
                 clock, Duration.ofMinutes(5),
@@ -130,14 +130,14 @@ public class FacadeTest {
     }
 
     @Test
-    void test09canNotClaimACardMoreThanOnceOnTheSameSession() {
+    void test09unableToClaimTheCardMoreThanOnceOnTheSameSession() {
         String token = facade.login(USER_1, PASSWORD_1);
         facade.claim(token, CARD_NUMBER_1);
         assertThrowsLike(() -> facade.claim(token, CARD_NUMBER_1), CLAIMED_CARD);
     }
 
     @Test
-    void test10failsToReadBalanceOfAnUnclaimedCard() {
+    void test10failsToReadDataFromUnclaimedCard() {
         String token = facade.login(USER_1, PASSWORD_1);
         assertThrowsLike(() -> facade.balance(token, CARD_NUMBER_1), UNCLAIMED_CARD);
         assertThrowsLike(() -> facade.statement(token, CARD_NUMBER_1), UNCLAIMED_CARD);
@@ -173,7 +173,7 @@ public class FacadeTest {
     }
 
     @Test
-    void test13rejectChargeOnUnclaimedCard_noToken() {
+    void test13rejectsChargeOnUnclaimedCard_noToken() {
         Facade facade = new Facade(
                 Clock.systemUTC(), Duration.ofMinutes(5),
                 Map.of(USER_1, PASSWORD_1),
@@ -184,7 +184,7 @@ public class FacadeTest {
     }
 
     @Test
-    void test14rejectChargeFromUnknownMerchantKey_noToken() {
+    void test14rejectsChargeFromUnknownMerchantKey_noToken() {
         Facade facade = new Facade(
                 Clock.systemUTC(), Duration.ofMinutes(5),
                 Map.of(USER_1, PASSWORD_1),
@@ -197,7 +197,7 @@ public class FacadeTest {
     }
 
     @Test
-    void test15rejectNonPositiveChargeAmount_noToken() {
+    void test15rejectsNonPositiveChargeAmount_noToken() {
         createFacadeForDatabaseWithOnlyOneUserCardAndMerchant(Clock.systemUTC());
         String token = facade.login(USER_1, PASSWORD_1);
         facade.claim(token, CARD_NUMBER_1);
@@ -206,7 +206,7 @@ public class FacadeTest {
     }
 
     @Test
-    void test16rejectChargeWithWrongMerchantCredential_noToken() {
+    void test16rejectsChargeWithWrongMerchantCredential_noToken() {
         createFacadeForDatabaseWithOnlyOneUserCardAndMerchant(Clock.systemUTC());
         String token = facade.login(USER_1, PASSWORD_1);
         facade.claim(token, CARD_NUMBER_1);
